@@ -70,6 +70,12 @@ module.exports = {
     save(db);
     return entry;
   },
+  updateDownload(id, updates) {
+    if (!db.downloads || !db.downloads[id]) return false;
+    db.downloads[id] = { ...db.downloads[id], ...updates, updatedAt: Date.now() };
+    save(db);
+    return db.downloads[id];
+  },
   removeDownload(id) {
     if (db.downloads) delete db.downloads[id];
     save(db);

@@ -89,10 +89,20 @@ router.post("/downloads", (req, res) => {
   if (!req.session || !req.session.user) return res.status(401).json({ error: "Non connecté" });
   const owners = (process.env.OWNERS || "").split(",").map(s => s.trim());
   if (!owners.includes(req.session.user.id)) return res.status(403).json({ error: "Pas owner" });
-  const { name, desc, image, url, price } = req.body;
+  const { name, desc, image, game, url, price } = req.body;
   if (!name || !url) return res.status(400).json({ error: "name et url requis" });
-  const item = db.addDownload({ name, desc: desc||"", image: image||"", url, price: price||"Free" });
+  const item = db.addDownload({ name, desc: desc||"", image: image||"", game: game||"", url, price: price||"Free" });
   res.json({ success: true, item });
+});
+
+router.put("/downloads/:id", (req, res) => {
+  if (!req.session || !req.session.user) return res.status(401).json({ error: "Non connecté" });
+  const owners = (process.env.OWNERS || "").split(",").map(s => s.trim());
+  if (!owners.includes(req.session.user.id)) return res.status(403).json({ error: "Pas owner" });
+  const { game } = req.body;
+  const updated = db.updateDownload(req.params.id, { game });
+  if (!updated) return res.status(404).json({ error: "Téléchargement non trouvé" });
+  res.json({ success: true });
 });
 
 router.delete("/downloads/:id", (req, res) => {
