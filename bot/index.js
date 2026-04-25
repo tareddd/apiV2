@@ -193,6 +193,7 @@ client.on("interactionCreate", async (interaction) => {
       switch (commandName) {
         case "bansite":
           data = await callApi("POST", `/ban/${id}`, { by });
+          console.log(`Réponse API bansite pour ${id}:`, JSON.stringify(data, null, 2));
           await interaction.editReply(data.success ? `✅ Banni : ${id}` : `❌ Erreur : ${data.error || 'Erreur inconnue'}`);
           break;
         case "unbansite":
