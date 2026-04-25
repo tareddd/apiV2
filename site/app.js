@@ -220,7 +220,7 @@ function renderDownloads(items){
   grid.innerHTML=items.map(d=>`
     <div class="dl-card" onclick="toggleDetails('${d.id}')" style="cursor: pointer;">
       ${d.image?`<img class="dl-card-img" src="${d.image}" alt="${d.name}" onerror="this.style.display='none'"/>`:""}
-      <span class="dl-price ${d.price==="15"?"dl-price-paid-15":d.price==="Free"||!d.price?"dl-price-free":"dl-price-paid"}">${d.price==="15"?"PAYANT 15$":d.price||"Free"}</span>
+      <span class="dl-price ${d.price==="15"?"dl-price-paid-15":d.price==="Free"||!d.price||d.price==="0"||d.price===0?"dl-price-free":"dl-price-paid"}">${d.price==="15"?"PAYANT 15$":d.price==="Free"||!d.price?"Free":d.price+"$"}</span>
       <h2>${d.name}</h2>
       ${d.game?`<p class="dl-note">🎮 Catégorie: ${getGameName(d.game)}</p>`:'<p class="dl-note">⚠️ Pas de catégorie</p>'}
       
