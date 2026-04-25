@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>FN Private — Vérification</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Inter',sans-serif;background:#080810;color:#e8e8f0;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+    .box{
+      position:relative;z-index:1;
+      text-align:center;background:#0e0e1a;
+      border-radius:20px;padding:60px 80px;max-width:480px;width:90%;
+    }
+    .icon{font-size:72px;margin-bottom:20px;display:block}
+    h1{font-size:1.8rem;font-weight:800;margin-bottom:12px}
+    p{color:#6b6b8a;line-height:1.6;margin-bottom:28px}
+    .btn{
+      display:inline-block;padding:12px 28px;border-radius:10px;
+      background:linear-gradient(135deg,#6c63ff,#8b5cf6);
+      color:#fff;font-weight:700;text-decoration:none;font-size:.95rem;
+      transition:all .2s;cursor:pointer;border:none;font-family:inherit;
+    }
+    .btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(108,99,255,.4)}
+    .ok   .box{border:1px solid rgba(0,230,118,.3);box-shadow:0 0 60px rgba(0,230,118,.08)}
+    .ok   h1{color:#00e676}
+    .ban  .box{border:1px solid rgba(255,71,87,.3);box-shadow:0 0 60px rgba(255,71,87,.08)}
+    .ban  h1{color:#ff4757}
+    .rate .box{border:1px solid rgba(255,165,2,.3);box-shadow:0 0 60px rgba(255,165,2,.08)}
+    .rate h1{color:#ffa502}
+  </style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="wrap">
+  <div class="box">
+    <span class="icon" id="ico"></span>
+    <h1 id="title"></h1>
+    <p id="msg"></p>
+    <a href="/" class="btn">Retour au site</a>
+  </div>
+</div>
+<script>
+// Stars
+(function(){
+  const cv=document.getElementById("c"),ctx=cv.getContext("2d");
+  let stars=[];
+  function resize(){cv.width=innerWidth;cv.height=innerHeight;}
+  function mk(){return{x:Math.random()*cv.width,y:Math.random()*cv.height,r:.3+Math.random()*1.5,a:Math.random(),da:.002+Math.random()*.004*(Math.random()<.5?1:-1),vx:(Math.random()-.5)*.06,vy:(Math.random()-.5)*.06,c:Math.random()<.3?"#6c63ff":Math.random()<.5?"#00d4ff":"#fff"}}
+  resize();stars=Array.from({length:140},mk);
+  function draw(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    for(const s of stars){
+      s.a+=s.da;if(s.a<=0||s.a>=1)s.da*=-1;
+      s.x+=s.vx;s.y+=s.vy;
+      if(s.x<0)s.x=cv.width;if(s.x>cv.width)s.x=0;
+      if(s.y<0)s.y=cv.height;if(s.y>cv.height)s.y=0;
+      ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=s.c;ctx.globalAlpha=s.a;ctx.fill();
+    }
+    ctx.globalAlpha=1;requestAnimationFrame(draw);
+  }
+  window.addEventListener("resize",resize);draw();
+})();
+
+// Contenu selon status
+const p = new URLSearchParams(location.search);
+const status = p.get("status");
+const wrap = document.getElementById("wrap");
+
+if(status === "ok"){
+  wrap.className = "ok";
+  document.getElementById("ico").textContent   = "✅";
+  document.getElementById("title").textContent = "Vérification réussie !";
+  document.getElementById("msg").textContent   = "Ton compte Discord a été vérifié. Tu peux retourner sur le launcher et lancer Fortnite.";
+} else if(status === "banned"){
+  wrap.className = "ban";
+  document.getElementById("ico").textContent   = "🚫";
+  document.getElementById("title").textContent = "Tu es banni";
+  document.getElementById("msg").textContent   = "Ton compte Discord est banni de FN Private. Tu ne peux pas accéder au launcher.";
+} else if(status === "ratelimited"){
+  wrap.className = "rate";
+  document.getElementById("ico").textContent   = "⏱️";
+  document.getElementById("title").textContent = "Accès temporairement bloqué";
+  document.getElementById("msg").textContent   = "Ton compte est ratelimité. Tu ne peux pas accéder au launcher pour le moment.";
+} else {
+  document.getElementById("ico").textContent   = "❌";
+  document.getElementById("title").textContent = "Erreur";
+  document.getElementById("msg").textContent   = "Une erreur est survenue lors de la vérification.";
+}
+</script>
+</body>
+</html>
