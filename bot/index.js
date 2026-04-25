@@ -12,6 +12,10 @@ function callApi(method, endpoint, body = null) {
   return new Promise((resolve, reject) => {
     const url = new URL(API_BASE + "/api" + endpoint);
     const payload = body ? JSON.stringify(body) : null;
+    console.log(`🔗 API Call: ${method} ${API_BASE}/api${endpoint}`);
+    console.log(`📤 Payload:`, payload);
+    console.log(`🔐 Auth: Bearer ${API_SECRET ? API_SECRET.substring(0, 10) + '...' : 'undefined'}`);
+    
     const options = {
       hostname: url.hostname,
       port: url.port || (url.protocol === "https:" ? 443 : 80),
@@ -26,13 +30,26 @@ function callApi(method, endpoint, body = null) {
     const lib = url.protocol === "https:" ? https : http;
     const req = lib.request(options, (res) => {
       let data = "";
+      console.log(`📥 Response status: ${res.statusCode}`);
       res.on("data", chunk => data += chunk);
       res.on("end", () => {
-        try { resolve(JSON.parse(data)); }
-        catch(e) { reject(new Error("Parse error: " + data)); }
+        console.log(`📥 Response data:`, data);
+        try { 
+          const parsed = JSON.parse(data);
+          console.log(`✅ Parsed response:`, parsed);
+          resolve(parsed);
+        }
+        catch(e) { 
+          console.error(`❌ Parse error:`, e.message);
+          console.error(`❌ Raw data:`, data);
+          reject(new Error("Parse error: " + data)); 
+        }
       });
     });
-    req.on("error", reject);
+    req.on("error", (error) => {
+      console.error(`❌ Request error:`, error);
+      reject(error);
+    });
     if (payload) req.write(payload);
     req.end();
   });
