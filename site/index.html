@@ -2,41 +2,48 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>FN Private</title>
   <link rel="stylesheet" href="style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 </head>
 <body>
-
 <canvas id="stars"></canvas>
 
 <!-- BLOCKED -->
 <div id="blocked-screen" class="hidden">
   <div class="blocked-box">
-    <div class="blocked-icon">🚫</div>
-    <h1 id="blocked-title">Accès refusé</h1>
-    <p id="blocked-msg">Tu n'as pas accès à ce site.</p>
-    <a href="/auth/logout" class="btn-outline" style="margin-top:20px;display:inline-block">Se déconnecter</a>
+    <div class="blocked-icon" id="blocked-icon">🔒</div>
+    <h1 id="blocked-title">Accès restreint</h1>
+    <p id="blocked-msg">Ton compte ne peut pas accéder à ce site.</p>
+    <a href="/auth/logout" class="btn-outline mt20">Changer de compte</a>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="login-screen" class="hidden">
+  <div class="login-box">
+    <div class="login-logo"><span class="grad-text">FN Private</span></div>
+    <p class="login-sub">Serveur Fortnite Privé</p>
+    <h2>Connexion requise</h2>
+    <p class="login-desc">Connecte ton Discord pour accéder au site et générer ta clé.</p>
+    <a href="/auth/discord" class="btn-discord">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.033.055a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+      Continuer avec Discord
+    </a>
   </div>
 </div>
 
 <!-- MAIN -->
 <div id="main-content" class="hidden">
-
   <nav>
-    <div class="nav-logo">
-      <span class="logo-bolt">⚡</span>
-      <span class="logo-fn">FN</span><span class="logo-private">Private</span>
-    </div>
+    <div class="nav-logo"><span class="grad-text">FN Private</span></div>
     <div class="nav-links">
       <a class="nav-link active" onclick="showPage('home')">Accueil</a>
-      <a class="nav-link" onclick="showPage('generator')">Générateur</a>
+      <a class="nav-link" onclick="showPage('generator')">Clé</a>
       <a class="nav-link" onclick="showPage('download')">Télécharger</a>
     </div>
-    <div class="nav-user" id="nav-user">
-      <!-- rempli par JS -->
-    </div>
+    <div class="nav-user" id="nav-user"></div>
   </nav>
 
   <!-- HOME -->
@@ -44,10 +51,11 @@
     <section class="hero">
       <div class="hero-glow g1"></div>
       <div class="hero-glow g2"></div>
+      <div class="hero-glow g3"></div>
       <div class="hero-content">
-        <div class="badge">🎮 Fortnite Private Server</div>
-        <h1>Joue sur notre<br/><span class="grad">serveur privé</span></h1>
-        <p class="hero-sub">Connecte ton Discord, génère ta clé, lance le jeu.</p>
+        <div class="badge">Fortnite Private Server</div>
+        <h1>Joue sur notre<br/><span class="grad-text">serveur privé</span></h1>
+        <p class="hero-sub">Génère ta clé, télécharge le launcher, rejoins le serveur.</p>
         <div class="hero-btns">
           <button class="btn-primary" onclick="showPage('generator')">Obtenir une clé</button>
           <button class="btn-ghost" onclick="showPage('download')">Télécharger</button>
@@ -62,86 +70,57 @@
       </div>
     </section>
     <section class="cards">
-      <div class="card"><div class="card-icon">🔑</div><h3>Clé unique</h3><p>Génère ta clé personnelle en un clic.</p></div>
-      <div class="card"><div class="card-icon">🚀</div><h3>Launcher custom</h3><p>Lance tous les processus Fortnite automatiquement.</p></div>
-      <div class="card"><div class="card-icon">🛡️</div><h3>Anti-cheat géré</h3><p>BE et EAC gérés proprement.</p></div>
-      <div class="card"><div class="card-icon">⚡</div><h3>Accès instantané</h3><p>Clé validée en temps réel via notre API.</p></div>
+      <div class="card"><div class="card-icon">🔑</div><h3>Clé unique</h3><p>Une clé permanente liée à ton compte Discord.</p></div>
+      <div class="card"><div class="card-icon">🚀</div><h3>Launcher</h3><p>Lance Fortnite Private en un clic.</p></div>
+      <div class="card"><div class="card-icon">🛡️</div><h3>Sécurisé</h3><p>Accès vérifié via Discord OAuth2.</p></div>
+      <div class="card"><div class="card-icon">⚡</div><h3>Instantané</h3><p>Validation de clé en temps réel.</p></div>
     </section>
   </div>
 
   <!-- GENERATOR -->
   <div id="page-generator" class="page hidden">
-    <div class="page-hdr"><h1>Générateur de clés</h1><p>Génère ta clé d'accès pour le launcher</p></div>
+    <div class="page-hdr"><h1>Ta clé d'accès</h1><p>Génère ta clé permanente pour le launcher</p></div>
     <div class="gen-wrap">
-      <div class="gen-cats">
-        <button class="cat active" onclick="setLang('fr',this)">🇫🇷 Français</button>
-        <button class="cat" onclick="setLang('en',this)">🇬🇧 English</button>
-      </div>
       <div class="gen-card">
         <div class="gen-card-top">
           <span class="gen-icon">🔑</span>
-          <span class="gen-lbl" id="gen-lbl">Clé d'accès</span>
+          <span class="gen-lbl">Clé d'accès launcher</span>
         </div>
         <div class="key-row">
           <div class="key-box">
             <span id="key-ph">Clique sur générer</span>
             <span id="key-val" class="hidden"></span>
           </div>
-          <button class="copy-btn hidden" id="copy-btn" onclick="copyKey()">
+          <button class="copy-btn hidden" id="copy-btn" onclick="copyKey()" title="Copier">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           </button>
         </div>
         <button class="btn-primary full" id="gen-btn" onclick="generateKey()">
-          <span id="gen-txt">⚡ Générer une clé</span>
+          <span id="gen-txt">Générer ma clé</span>
           <div class="spin hidden" id="gen-spin"></div>
         </button>
-        <p class="gen-note" id="gen-note">La clé est à usage unique. Garde-la précieusement.</p>
+        <p class="gen-note" id="gen-note">Ta clé est permanente et liée à ton compte Discord. Pour la changer, demande à un admin via /changekey.</p>
       </div>
       <div class="steps">
-        <div class="step"><div class="step-n">1</div><div class="step-t" id="s1">Génère ta clé</div></div>
+        <div class="step"><div class="step-n">1</div><div class="step-t">Génère ta clé</div></div>
         <div class="step-arr">→</div>
-        <div class="step"><div class="step-n">2</div><div class="step-t" id="s2">Télécharge le launcher</div></div>
+        <div class="step"><div class="step-n">2</div><div class="step-t">Télécharge le launcher</div></div>
         <div class="step-arr">→</div>
-        <div class="step"><div class="step-n">3</div><div class="step-t" id="s3">Entre la clé</div></div>
+        <div class="step"><div class="step-n">3</div><div class="step-t">Entre la clé et joue</div></div>
       </div>
     </div>
   </div>
 
   <!-- DOWNLOAD -->
   <div id="page-download" class="page hidden">
-    <div class="page-hdr"><h1>Télécharger le Launcher</h1><p>Lance Fortnite Private en un clic</p></div>
-    <div class="dl-wrap">
-      <div class="dl-card">
-        <div class="dl-ico">🖥️</div>
-        <h2>FN Private Launcher</h2>
-        <p class="dl-ver">v1.0.0 — Windows x64</p>
-        <ul class="dl-list">
-          <li>✅ Lance les 4 processus Fortnite</li>
-          <li>✅ Gère BE &amp; EAC automatiquement</li>
-          <li>✅ Validation de clé en temps réel</li>
-          <li>✅ Interface animée style site</li>
-        </ul>
-        <a href="https://github.com/tareddd/vvvvvv/raw/main/FNPrivateLauncher.exe" class="btn-primary full" download>⬇️ Télécharger (.exe)</a>
-        <p class="dl-note">Nécessite une clé générée depuis le Générateur</p>
-      </div>
+    <div class="page-hdr"><h1>Téléchargements</h1><p>Tout ce dont tu as besoin pour jouer</p></div>
+    <div class="dl-grid" id="dl-grid">
+      <!-- Rempli par JS depuis downloads.js -->
     </div>
   </div>
 
-</div><!-- /main -->
-
-<!-- LOGIN SCREEN -->
-<div id="login-screen" class="hidden">
-  <div class="login-box">
-    <div class="login-logo"><span class="logo-bolt">⚡</span><span class="logo-fn">FN</span><span class="logo-private">Private</span></div>
-    <h2>Connecte ton Discord</h2>
-    <p>Pour accéder au site, connecte ton compte Discord.<br/>Le bot vérifiera si tu as accès.</p>
-    <a href="/auth/discord" class="btn-discord">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.033.055a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
-      Se connecter avec Discord
-    </a>
-  </div>
 </div>
-
+<script src="downloads.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
