@@ -106,6 +106,7 @@ async function copyKey(){
 
 // ── Auth Discord ──────────────────────────────────────────
 let currentRole = "member";
+let currentUserId = null;
 
 async function initAuth(){
   const main=document.getElementById("main-content");
@@ -150,6 +151,7 @@ async function initAuth(){
   }
 
   currentRole = data.role || "member";
+  currentUserId = data.user ? data.user.id : null;
 
   // Accès OK
   main.classList.remove("hidden");
@@ -228,7 +230,10 @@ function renderDownloads(items){
         <p class="dl-details-text">${d.details || d.desc || "Aucune description détaillée disponible."}</p>
       </div>
       
-      <button class="btn-primary full" onclick="event.stopPropagation(); downloadWithKeyCheck('${d.url}', '${d.name}')">⬇️ Télécharger</button>
+      ${d.price && d.price !== "Free" ? 
+  `<button class="btn-primary full" onclick="event.stopPropagation(); processPayment('${d.id}', '${d.name}', '${d.price}')">💳 Payer ${d.price}$</button>` :
+  `<button class="btn-primary full" onclick="event.stopPropagation(); downloadWithKeyCheck('${d.url}', '${d.name}')">⬇️ Télécharger</button>`
+}
       ${adminUnlocked?`
         <div style="display:flex;gap:8px;margin-top:8px;" onclick="event.stopPropagation();">
           <button class="dl-edit" onclick="editCategory('${d.id}', '${d.game || ''}')">Modifier catégorie</button>
@@ -244,6 +249,47 @@ function toggleDetails(id) {
   const detailsElement = document.getElementById(`details-${id}`);
   if (detailsElement) {
     detailsElement.classList.toggle('hidden');
+  }
+}
+
+// Fonction de traitement de paiement PayPal
+async function processPayment(productId, productName, price) {
+  // Vérifier si l'utilisateur est connecté
+  if (!currentKey) {
+    alert("Vous devez d'abord générer votre clé d'accès !");
+    showPage('generator');
+    return;
+  }
+
+  // Créer le paiement PayPal
+  try {
+    const response = await fetch('/api/payment/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        productId: productId,
+        productName: productName,
+        price: price,
+        userId: currentUserId // À définir lors de l'auth
+      })
+    });
+
+    const paymentData = await response.json();
+    
+    if (paymentData.success) {
+      // Rediriger vers PayPal
+      window.open(paymentData.paymentUrl, '_blank');
+      
+      // Afficher un message d'instructions
+      alert(`Paiement initié pour ${productName} (${price}$).\n\nAprès paiement, un ticket sera créé sur Discord. Attendez qu'un admin utilise /unlock ${currentUserId} pour débloquer votre accès.`);
+    } else {
+      alert('Erreur lors de la création du paiement: ' + paymentData.error);
+    }
+  } catch (error) {
+    console.error('Erreur de paiement:', error);
+    alert('Erreur de connexion au service de paiement.');
   }
 }
 

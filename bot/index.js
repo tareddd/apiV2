@@ -52,9 +52,7 @@ const commands = [
     .addStringOption(o => o.setName("id").setDescription("ID Discord").setRequired(true)),
   new SlashCommandBuilder().setName("repairkey").setDescription("Répare/réinitialise la key d'un utilisateur")
     .addStringOption(o => o.setName("id").setDescription("ID Discord").setRequired(true)),
-  new SlashCommandBuilder().setName("banIP").setDescription("Bannir l'IP d'un utilisateur")
-    .addStringOption(o => o.setName("id").setDescription("ID Discord").setRequired(true)),
-  new SlashCommandBuilder().setName("unbanIP").setDescription("Débannir l'IP d'un utilisateur")
+  new SlashCommandBuilder().setName("unlock").setDescription("Débloquer l'accès d'un utilisateur après paiement")
     .addStringOption(o => o.setName("id").setDescription("ID Discord").setRequired(true)),
 
   // Commandes de gestion des clés
@@ -190,7 +188,7 @@ client.on("interactionCreate", async (interaction) => {
     const commandName = interaction.commandName;
 
     // Commandes de bannissement existantes
-    if (["bansite", "unbansite", "ratelimited", "unrate", "changekey", "repairkey", "banIP", "unbanIP"].includes(commandName)) {
+    if (["bansite", "unbansite", "ratelimited", "unrate", "changekey", "repairkey", "unlock"].includes(commandName)) {
       const id = interaction.options.getString("id");
       switch (commandName) {
         case "bansite":
@@ -214,13 +212,9 @@ client.on("interactionCreate", async (interaction) => {
           data = await callApi("POST", `/keys/reset/${id}`);
           await interaction.editReply(data.success ? `✅ Key reset : ${id}` : `❌ Erreur : ${data.error}`);
           break;
-        case "banIP":
-          data = await callApi("POST", `/banip/${id}`, { by });
-          await interaction.editReply(data.success ? `✅ IP bannie : ${id}` : `❌ Erreur : ${data.error}`);
-          break;
-        case "unbanIP":
-          data = await callApi("POST", `/unbanip/${id}`, { by });
-          await interaction.editReply(data.success ? `✅ IP débannie : ${id}` : `❌ Erreur : ${data.error}`);
+        case "unlock":
+          data = await callApi("POST", `/unlock/${id}`, { by });
+          await interaction.editReply(data.success ? `✅ Accès débloqué pour : ${id}` : `❌ Erreur : ${data.error}`);
           break;
       }
     }
