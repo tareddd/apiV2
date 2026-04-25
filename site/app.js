@@ -47,6 +47,18 @@ function filterContent(){
   loadDownloads(); // Recharge les téléchargements avec le filtre
 }
 
+// Convertit les codes de jeu en noms lisibles
+function getGameName(gameCode){
+  const gameNames = {
+    'zelda-botw': 'Zelda Breath of the Wild',
+    'zelda-totk': 'Zelda Tears of the Kingdom',
+    'gta-v': 'Grand Theft Auto V',
+    'fortnite': 'Fortnite',
+    'fortnite-og': 'Fortnite OG'
+  };
+  return gameNames[gameCode] || gameCode || 'Non défini';
+}
+
 // ── Génération clé ────────────────────────────────────────
 let currentKey=null;
 
@@ -178,13 +190,20 @@ async function loadDownloads(){
     const res=await fetch("/api/downloads");
     const items=await res.json();
     
+    // Debug: afficher les téléchargements reçus
+    console.log("Téléchargements reçus:", items);
+    console.log("Filtre actuel:", currentGameFilter);
+    
     // Filtrer les téléchargements par jeu si un filtre est sélectionné
     const filteredItems = currentGameFilter 
       ? items.filter(item => item.game === currentGameFilter)
       : items;
     
+    console.log("Téléchargements filtrés:", filteredItems);
+    
     renderDownloads(filteredItems);
   }catch(_){
+    console.error("Erreur lors du chargement des téléchargements:", _);
     grid.innerHTML=`<p style="color:var(--muted);text-align:center;padding:40px">Aucun téléchargement disponible.</p>`;
   }
 }
@@ -202,6 +221,7 @@ function renderDownloads(items){
       <span class="dl-price ${d.price==="Free"||!d.price?"dl-price-free":"dl-price-paid"}">${d.price||"Free"}</span>
       <h2>${d.name}</h2>
       ${d.desc?`<p class="dl-desc">${d.desc}</p>`:""}
+      ${d.game?`<p class="dl-note">🎮 Catégorie: ${getGameName(d.game)}</p>`:'<p class="dl-note">⚠️ Pas de catégorie</p>'}
       <button class="btn-primary full" onclick="downloadWithKeyCheck('${d.url}', '${d.name}')">⬇️ Télécharger</button>
       ${adminUnlocked?`<button class="dl-delete" onclick="deleteDownload('${d.id}')">Supprimer</button>`:""}
     </div>
