@@ -193,28 +193,28 @@ client.on("interactionCreate", async (interaction) => {
       switch (commandName) {
         case "bansite":
           data = await callApi("POST", `/ban/${id}`, { by });
-          await interaction.editReply(data.success ? `✅ Banni : ${id}` : `❌ Erreur : ${data.error}`);
+          await interaction.editReply(data.success ? `✅ Banni : ${id}` : `❌ Erreur : ${data.error || 'Erreur inconnue'}`);
           break;
         case "unbansite":
           data = await callApi("POST", `/unban/${id}`, { by });
-          await interaction.editReply(data.success ? `✅ Débanni : ${id}` : `❌ Erreur : ${data.error}`);
+          await interaction.editReply(data.success ? `✅ Débanni : ${id}` : `❌ Erreur : ${data.error || 'Erreur inconnue'}`);
           break;
         case "ratelimited":
           data = await callApi("POST", `/ratelimit/${id}`, { by });
-          await interaction.editReply(data.success ? `✅ Ratelimite : ${id}` : `❌ Erreur : ${data.error}`);
+          await interaction.editReply(data.success ? `✅ Ratelimite : ${id}` : `❌ Erreur : ${data.error || 'Erreur inconnue'}`);
           break;
         case "unrate":
           data = await callApi("POST", `/unratelimit/${id}`, { by });
-          await interaction.editReply(data.success ? `✅ Ratelimit retire : ${id}` : `❌ Erreur : ${data.error}`);
+          await interaction.editReply(data.success ? `✅ Ratelimit retire : ${id}` : `❌ Erreur : ${data.error || 'Erreur inconnue'}`);
           break;
         case "changekey":
         case "repairkey":
           data = await callApi("POST", `/keys/reset/${id}`);
-          await interaction.editReply(data.success ? `✅ Key reset : ${id}` : `❌ Erreur : ${data.error}`);
+          await interaction.editReply(data.success ? `✅ Key reset : ${id}` : `❌ Erreur : ${data.error || 'Erreur inconnue'}`);
           break;
         case "unlock":
           data = await callApi("POST", `/unlock/${id}`, { by });
-          await interaction.editReply(data.success ? `✅ Accès débloqué pour : ${id}` : `❌ Erreur : ${data.error}`);
+          await interaction.editReply(data.success ? `✅ Accès débloqué pour : ${id}` : `❌ Erreur : ${data.error || 'Erreur inconnue'}`);
           break;
       }
     }
@@ -511,8 +511,13 @@ client.on("interactionCreate", async (interaction) => {
     }
 
   } catch (e) {
-    console.error("Erreur API:", e.message);
-    await interaction.editReply("❌ Erreur API: " + e.message);
+    console.error("Erreur commande:", e);
+    const errorMsg = e.message.includes("ECONNREFUSED") ? 
+      "❌ API inaccessible - vérifiez que le serveur API est démarré" :
+      e.message.includes("Parse error") ? 
+      "❌ Erreur de réponse de l'API" :
+      "❌ Erreur interne du bot";
+    await interaction.editReply(errorMsg);
   }
 });
 
