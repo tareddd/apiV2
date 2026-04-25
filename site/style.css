@@ -22,6 +22,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 /* NAV */
 nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:60px;background:rgba(4,6,15,.75);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.05);}
 .nav-logo{font-size:1.15rem;font-weight:900;letter-spacing:-.5px}
+.game-selector{margin:0 20px}
+.game-selector select{padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.3);color:var(--text);font-size:.85rem;font-family:inherit;cursor:pointer;transition:border-color .2s;min-width:200px;}
+.game-selector select:focus{outline:none;border-color:var(--cyan)}
+.game-selector select option{background:var(--bg2);color:var(--text)}
 .nav-links{display:flex;gap:2px}
 .nav-link{padding:6px 14px;border-radius:8px;color:var(--muted);font-size:.85rem;font-weight:500;cursor:pointer;transition:all .2s;}
 .nav-link:hover,.nav-link.active{color:var(--text);background:rgba(255,255,255,.06)}
@@ -154,8 +158,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:cent
 .modal h2{font-size:1.2rem;font-weight:800;margin-bottom:20px}
 .modal-form{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
 .modal-form label{font-size:.72rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.modal-form input{padding:10px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.3);color:var(--text);font-size:.9rem;font-family:inherit;transition:border-color .2s}
-.modal-form input:focus{outline:none;border-color:var(--cyan)}
+.modal-form input,.modal-form select{padding:10px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.3);color:var(--text);font-size:.9rem;font-family:inherit;transition:border-color .2s}
+.modal-form input:focus,.modal-form select:focus{outline:none;border-color:var(--cyan)}
+.modal-form select option{background:var(--bg2);color:var(--text)}
 .modal-btns{display:flex;gap:10px;justify-content:flex-end}
 
 /* BLOCKED */

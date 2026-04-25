@@ -38,6 +38,15 @@ function showPage(name){
   if(l)l.classList.add("active");
 }
 
+// ── Filtrage par jeu ────────────────────────────────────────
+let currentGameFilter = "";
+
+function filterContent(){
+  const select = document.getElementById("game-select");
+  currentGameFilter = select.value;
+  loadDownloads(); // Recharge les téléchargements avec le filtre
+}
+
 // ── Génération clé ────────────────────────────────────────
 let currentKey=null;
 
@@ -168,7 +177,13 @@ async function loadDownloads(){
   try{
     const res=await fetch("/api/downloads");
     const items=await res.json();
-    renderDownloads(items);
+    
+    // Filtrer les téléchargements par jeu si un filtre est sélectionné
+    const filteredItems = currentGameFilter 
+      ? items.filter(item => item.game === currentGameFilter)
+      : items;
+    
+    renderDownloads(filteredItems);
   }catch(_){
     grid.innerHTML=`<p style="color:var(--muted);text-align:center;padding:40px">Aucun téléchargement disponible.</p>`;
   }
@@ -224,19 +239,20 @@ async function submitDownload(){
   const name=document.getElementById("dl-name").value.trim();
   const desc=document.getElementById("dl-desc").value.trim();
   const image=document.getElementById("dl-image").value.trim();
+  const game=document.getElementById("dl-game").value.trim();
   const url=document.getElementById("dl-url").value.trim();
   const price=document.getElementById("dl-price").value.trim()||"Free";
-  if(!name||!url){alert("Nom et lien requis.");return;}
+  if(!name||!url||!game){alert("Nom, lien et catégorie de jeu requis.");return;}
   const res=await fetch("/api/downloads",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({name,desc,image,url,price})
+    body:JSON.stringify({name,desc,image,game,url,price})
   });
   const d=await res.json();
   if(d.success){
     closeModal();
     // Reset form
-    ["dl-name","dl-desc","dl-image","dl-url","dl-price"].forEach(id=>document.getElementById(id).value="");
+    ["dl-name","dl-desc","dl-image","dl-game","dl-url","dl-price"].forEach(id=>document.getElementById(id).value="");
     loadDownloads();
   } else {
     alert(d.error||"Erreur");
