@@ -142,8 +142,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:cent
 .dl-card h2{font-size:1.1rem;font-weight:800;margin-bottom:6px}
 .dl-desc{color:var(--muted);font-size:.825rem;margin-bottom:16px;line-height:1.5}
 .dl-note{font-size:.75rem;color:var(--muted);margin-top:10px}
-.dl-delete{margin-top:8px;padding:7px;border-radius:8px;border:1px solid rgba(239,68,68,.25);background:transparent;color:var(--err);cursor:pointer;font-size:.8rem;font-family:inherit;transition:all .2s;width:100%}
+.dl-delete{margin-top:8px;padding:7px;border-radius:8px;border:1px solid rgba(239,68,68,.25);background:transparent;color:var(--err);cursor:pointer;font-size:.8rem;font-family:inherit;transition:all .2s;flex:1}
 .dl-delete:hover{background:rgba(239,68,68,.08)}
+.dl-edit{margin-top:8px;padding:7px;border-radius:8px;border:1px solid rgba(6,182,212,.25);background:transparent;color:var(--cyan);cursor:pointer;font-size:.8rem;font-family:inherit;transition:all .2s;flex:1}
+.dl-edit:hover{background:rgba(6,182,212,.08)}
 .dl-empty{grid-column:1/-1;text-align:center;padding:80px 24px;color:var(--muted)}
 .dl-empty-icon{font-size:3rem;margin-bottom:16px}
 .dl-empty h3{font-size:1.1rem;font-weight:700;margin-bottom:8px;color:var(--text)}

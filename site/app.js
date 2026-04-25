@@ -223,7 +223,12 @@ function renderDownloads(items){
       ${d.desc?`<p class="dl-desc">${d.desc}</p>`:""}
       ${d.game?`<p class="dl-note">🎮 Catégorie: ${getGameName(d.game)}</p>`:'<p class="dl-note">⚠️ Pas de catégorie</p>'}
       <button class="btn-primary full" onclick="downloadWithKeyCheck('${d.url}', '${d.name}')">⬇️ Télécharger</button>
-      ${adminUnlocked?`<button class="dl-delete" onclick="deleteDownload('${d.id}')">Supprimer</button>`:""}
+      ${adminUnlocked?`
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button class="dl-edit" onclick="editCategory('${d.id}', '${d.game || ''}')">Modifier catégorie</button>
+          <button class="dl-delete" onclick="deleteDownload('${d.id}')">Supprimer</button>
+        </div>
+      `:""}
     </div>
   `).join("");
 }
@@ -232,6 +237,68 @@ async function deleteDownload(id){
   if(!confirm("Supprimer ce téléchargement ?")) return;
   await fetch(`/api/downloads/${id}`,{method:"DELETE"});
   loadDownloads();
+}
+
+// ── Modification de catégorie ───────────────────────────────────
+async function editCategory(id, currentGame){
+  const gameOptions = [
+    { value: '', text: 'Pas de catégorie' },
+    { value: 'zelda-botw', text: 'Zelda Breath of the Wild' },
+    { value: 'zelda-totk', text: 'Zelda Tears of the Kingdom' },
+    { value: 'gta-v', text: 'Grand Theft Auto V' },
+    { value: 'fortnite', text: 'Fortnite' },
+    { value: 'fortnite-og', text: 'Fortnite OG' }
+  ];
+  
+  const options = gameOptions.map(opt => 
+    `<option value="${opt.value}" ${opt.value === currentGame ? 'selected' : ''}>${opt.text}</option>`
+  ).join('');
+  
+  const modalHTML = `
+    <div class="modal-overlay" id="edit-modal-overlay" onclick="closeEditModal()">
+      <div class="modal" onclick="event.stopPropagation()">
+        <h2>Modifier la catégorie</h2>
+        <div class="modal-form">
+          <label>Nouvelle catégorie</label>
+          <select id="edit-game-select">
+            ${options}
+          </select>
+        </div>
+        <div class="modal-btns">
+          <button class="btn-ghost" onclick="closeEditModal()">Annuler</button>
+          <button class="btn-primary" onclick="saveCategory('${id}')">Sauvegarder</button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function closeEditModal(){
+  const modal = document.getElementById('edit-modal-overlay');
+  if(modal) modal.remove();
+}
+
+async function saveCategory(id){
+  const newGame = document.getElementById('edit-game-select').value;
+  
+  try{
+    const res = await fetch(`/api/downloads/${id}`, {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({game: newGame})
+    });
+    
+    if(res.ok){
+      closeEditModal();
+      loadDownloads();
+    } else {
+      alert('Erreur lors de la modification de la catégorie');
+    }
+  }catch(_){
+    alert('Erreur de connexion');
+  }
 }
 
 // ── Téléchargement avec vérification de clé ────────────────────────
