@@ -200,7 +200,7 @@ async function deleteDownload(id){
 }
 
 // ── Modal ajout ───────────────────────────────────────────
-const ADMIN_CREDS = { user: "dma", pass: "APIV2DMASITE" };
+const ADMIN_CREDS = { user: "dmaowner", pass: "APIV2" };
 let adminUnlocked = false;
 
 function openAddModal(){
