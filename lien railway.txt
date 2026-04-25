@@ -1,0 +1,3 @@
+bot : https://railway.com/project/074ccc9f-cf1a-45b8-ab94-a9bc56e503d9/service/49c9b50d-7bfe-46d3-ba81-8afb0162f9b1/variables?environmentId=c314a2a2-0f51-45c3-a14c-291152b0b76e
+APIV2 : https://railway.com/project/074ccc9f-cf1a-45b8-ab94-a9bc56e503d9/service/c96fea79-20fc-4bc4-a8a8-2538b158f04b/variables?environmentId=c314a2a2-0f51-45c3-a14c-291152b0b76e
+GYYxC54rPyoqRYO6
