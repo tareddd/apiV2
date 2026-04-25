@@ -159,10 +159,11 @@ async function initAuth(){
 async function loadDownloads(){
   const grid=document.getElementById("dl-grid");
   const fab=document.getElementById("fab-add");
-  if(!grid) return;
 
-  // Affiche toujours le FAB
+  // Affiche toujours le FAB peu importe la page
   if(fab) fab.classList.remove("hidden");
+
+  if(!grid) return;
 
   try{
     const res=await fetch("/api/downloads");
