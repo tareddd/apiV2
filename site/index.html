@@ -9,12 +9,13 @@
 </head>
 <body>
 <canvas id="stars"></canvas>
+<div class="noise"></div>
 
 <!-- BLOCKED -->
 <div id="blocked-screen" class="hidden">
   <div class="blocked-box">
     <div class="blocked-icon" id="blocked-icon">🔒</div>
-    <h1 id="blocked-title">Accès restreint</h1>
+    <h1 id="blocked-title">Accès refusé</h1>
     <p id="blocked-msg">Ton compte ne peut pas accéder à ce site.</p>
     <a href="/auth/logout" class="btn-outline mt20">Changer de compte</a>
   </div>
@@ -23,6 +24,7 @@
 <!-- LOGIN -->
 <div id="login-screen" class="hidden">
   <div class="login-box">
+    <div class="login-glow"></div>
     <div class="login-logo"><span class="grad-text">FN Private</span></div>
     <p class="login-sub">Serveur Fortnite Privé</p>
     <h2>Connexion requise</h2>
@@ -49,16 +51,23 @@
   <!-- HOME -->
   <div id="page-home" class="page active">
     <section class="hero">
-      <div class="hero-glow g1"></div>
-      <div class="hero-glow g2"></div>
-      <div class="hero-glow g3"></div>
+      <div class="hero-orb orb1"></div>
+      <div class="hero-orb orb2"></div>
+      <div class="hero-orb orb3"></div>
       <div class="hero-content">
-        <div class="badge">Fortnite Private Server</div>
+        <div class="badge-wrap">
+          <span class="badge-dot"></span>
+          <span class="badge-txt">Serveur en ligne</span>
+        </div>
         <h1>Joue sur notre<br/><span class="grad-text">serveur privé</span></h1>
         <p class="hero-sub">Génère ta clé, télécharge le launcher, rejoins le serveur.</p>
         <div class="hero-btns">
-          <button class="btn-primary" onclick="showPage('generator')">Obtenir une clé</button>
-          <button class="btn-ghost" onclick="showPage('download')">Télécharger</button>
+          <button class="btn-primary" onclick="showPage('generator')">
+            <span class="btn-icon">🔑</span> Obtenir une clé
+          </button>
+          <button class="btn-ghost" onclick="showPage('download')">
+            <span class="btn-icon">⬇️</span> Télécharger
+          </button>
         </div>
         <div class="hero-stats">
           <div class="stat"><span class="sn">100%</span><span class="sl">Gratuit</span></div>
@@ -68,18 +77,75 @@
           <div class="stat"><span class="sn">FR</span><span class="sl">Communauté</span></div>
         </div>
       </div>
+      <div class="hero-scroll">
+        <div class="scroll-line"></div>
+        <span>Scroll</span>
+      </div>
     </section>
-    <section class="cards">
-      <div class="card"><div class="card-icon">🔑</div><h3>Clé unique</h3><p>Une clé permanente liée à ton compte Discord.</p></div>
-      <div class="card"><div class="card-icon">🚀</div><h3>Launcher</h3><p>Lance Fortnite Private en un clic.</p></div>
-      <div class="card"><div class="card-icon">🛡️</div><h3>Sécurisé</h3><p>Accès vérifié via Discord OAuth2.</p></div>
-      <div class="card"><div class="card-icon">⚡</div><h3>Instantané</h3><p>Validation de clé en temps réel.</p></div>
+
+    <section class="features">
+      <div class="features-label">Pourquoi FN Private ?</div>
+      <div class="features-grid">
+        <div class="feat-card">
+          <div class="feat-icon-wrap"><span>🔑</span></div>
+          <h3>Clé permanente</h3>
+          <p>Une clé unique liée à ton compte Discord. Valide à vie.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon-wrap"><span>🚀</span></div>
+          <h3>Launcher custom</h3>
+          <p>Lance Fortnite Private en un clic depuis notre launcher.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon-wrap"><span>🛡️</span></div>
+          <h3>Sécurisé</h3>
+          <p>Accès vérifié via Discord OAuth2. Bans gérés en temps réel.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon-wrap"><span>⚡</span></div>
+          <h3>Instantané</h3>
+          <p>Validation de clé en temps réel via notre API.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="steps-section">
+      <div class="features-label">Comment commencer</div>
+      <div class="steps-row">
+        <div class="step-card">
+          <div class="step-num">01</div>
+          <h3>Connecte Discord</h3>
+          <p>Connecte ton compte Discord pour accéder au site.</p>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step-card">
+          <div class="step-num">02</div>
+          <h3>Génère ta clé</h3>
+          <p>Va dans l'onglet Clé et génère ta clé permanente.</p>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step-card">
+          <div class="step-num">03</div>
+          <h3>Télécharge</h3>
+          <p>Télécharge le launcher depuis l'onglet Télécharger.</p>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step-card">
+          <div class="step-num">04</div>
+          <h3>Joue !</h3>
+          <p>Entre ta clé dans le launcher et lance Fortnite.</p>
+        </div>
+      </div>
     </section>
   </div>
 
   <!-- GENERATOR -->
   <div id="page-generator" class="page hidden">
-    <div class="page-hdr"><h1>Ta clé d'accès</h1><p>Génère ta clé permanente pour le launcher</p></div>
+    <div class="page-hdr">
+      <div class="page-hdr-orb"></div>
+      <h1>Ta clé d'accès</h1>
+      <p>Génère ta clé permanente pour le launcher</p>
+    </div>
     <div class="gen-wrap">
       <div class="gen-card">
         <div class="gen-card-top">
@@ -99,51 +165,72 @@
           <span id="gen-txt">Générer ma clé</span>
           <div class="spin hidden" id="gen-spin"></div>
         </button>
-        <p class="gen-note" id="gen-note">Ta clé est permanente et liée à ton compte Discord. Pour la changer, demande à un admin via /changekey.</p>
+        <p class="gen-note" id="gen-note">Ta clé est permanente et liée à ton compte Discord. Pour la changer, demande /changekey à un admin.</p>
       </div>
-      <div class="steps">
-        <div class="step"><div class="step-n">1</div><div class="step-t">Génère ta clé</div></div>
-        <div class="step-arr">→</div>
-        <div class="step"><div class="step-n">2</div><div class="step-t">Télécharge le launcher</div></div>
-        <div class="step-arr">→</div>
-        <div class="step"><div class="step-n">3</div><div class="step-t">Entre la clé et joue</div></div>
+      <div class="gen-info-grid">
+        <div class="gen-info-card">
+          <span class="gen-info-icon">🔒</span>
+          <div>
+            <strong>Permanente</strong>
+            <p>Ta clé ne change jamais sauf si tu le demandes.</p>
+          </div>
+        </div>
+        <div class="gen-info-card">
+          <span class="gen-info-icon">⚡</span>
+          <div>
+            <strong>Instantanée</strong>
+            <p>Validée en temps réel à chaque lancement.</p>
+          </div>
+        </div>
+        <div class="gen-info-card">
+          <span class="gen-info-icon">🛡️</span>
+          <div>
+            <strong>Sécurisée</strong>
+            <p>Liée à ton Discord, impossible à voler.</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- DOWNLOAD -->
   <div id="page-download" class="page hidden">
-    <div class="page-hdr"><h1>Téléchargements</h1><p>Tout ce dont tu as besoin pour jouer</p></div>
+    <div class="page-hdr">
+      <div class="page-hdr-orb"></div>
+      <h1>Téléchargements</h1>
+      <p>Tout ce dont tu as besoin pour jouer</p>
+    </div>
     <div class="dl-grid" id="dl-grid"></div>
   </div>
 
-  <!-- FAB flottant — toujours visible -->
-  <button class="fab hidden" id="fab-add" onclick="openAddModal()" title="Ajouter">+</button>
+</div>
 
-  <!-- Modal ajout download -->
-  <div class="modal-overlay hidden" id="modal-overlay" onclick="closeModal()">
-    <div class="modal" onclick="event.stopPropagation()">
-      <h2>Ajouter un téléchargement</h2>
-      <div class="modal-form">
-        <label>Nom *</label>
-        <input type="text" id="dl-name" placeholder="FN Private Launcher"/>
-        <label>Description</label>
-        <input type="text" id="dl-desc" placeholder="Lance Fortnite Private en un clic"/>
-        <label>Image (URL)</label>
-        <input type="text" id="dl-image" placeholder="https://..."/>
-        <label>Lien de téléchargement *</label>
-        <input type="text" id="dl-url" placeholder="https://github.com/.../fichier.exe"/>
-        <label>Prix</label>
-        <input type="text" id="dl-price" placeholder="Free"/>
-      </div>
-      <div class="modal-btns">
-        <button class="btn-ghost" onclick="closeModal()">Annuler</button>
-        <button class="btn-primary" onclick="submitDownload()">Ajouter</button>
-      </div>
+<!-- FAB -->
+<button class="fab hidden" id="fab-add" onclick="openAddModal()" title="Ajouter">+</button>
+
+<!-- Modal -->
+<div class="modal-overlay hidden" id="modal-overlay" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2>Ajouter un téléchargement</h2>
+    <div class="modal-form">
+      <label>Nom *</label>
+      <input type="text" id="dl-name" placeholder="FN Private Launcher"/>
+      <label>Description</label>
+      <input type="text" id="dl-desc" placeholder="Lance Fortnite Private en un clic"/>
+      <label>Image (URL)</label>
+      <input type="text" id="dl-image" placeholder="https://..."/>
+      <label>Lien de téléchargement *</label>
+      <input type="text" id="dl-url" placeholder="https://github.com/.../fichier.exe"/>
+      <label>Prix</label>
+      <input type="text" id="dl-price" placeholder="Free"/>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-ghost" onclick="closeModal()">Annuler</button>
+      <button class="btn-primary" onclick="submitDownload()">Ajouter</button>
     </div>
   </div>
-
 </div>
+
 <script src="downloads.js"></script>
 <script src="app.js"></script>
 </body>
