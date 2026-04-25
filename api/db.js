@@ -8,7 +8,7 @@ function save(db) {
   fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
 }
 
-let db = Object.assign({ banned:{}, ratelimited:{}, userKeys:{}, keys:{} }, load());
+let db = Object.assign({ banned:{}, ratelimited:{}, userKeys:{}, keys:{}, unlocked:{} }, load());
 
 module.exports = {
   // ── BAN ──────────────────────────────────────────────
@@ -82,5 +82,32 @@ module.exports = {
   },
   getDownloads() {
     return Object.values(db.downloads || {}).sort((a,b) => b.createdAt - a.createdAt);
+  },
+
+  // ── UNLOCK (déblocage après paiement) ─────────────────────
+  // Vérifie si un utilisateur existe (a une clé ou est dans la base)
+  userExists(userId) {
+    return !!db.userKeys[userId] || !!db.banned[userId] || !!db.ratelimited[userId];
+  },
+  // Débloque un utilisateur pour les téléchargements payants
+  unlockUser(userId) {
+    db.unlocked[userId] = { unlockedAt: Date.now(), active: true };
+    save(db);
+  },
+  // Vérifie si un utilisateur est débloqué
+  isUserUnlocked(userId) {
+    const unlock = db.unlocked[userId];
+    return unlock && unlock.active;
+  },
+  // Obtient la liste des utilisateurs débloqués
+  getUnlockedUsers() {
+    return db.unlocked;
+  },
+  // Révoque le déblocage d'un utilisateur
+  revokeUnlock(userId) {
+    if (db.unlocked[userId]) {
+      db.unlocked[userId].active = false;
+      save(db);
+    }
   }
 };

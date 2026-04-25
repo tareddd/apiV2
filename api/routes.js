@@ -82,6 +82,37 @@ router.post("/keys/reset/:id", apiAuth, (req, res) => {
 
 router.get("/keys", apiAuth, (req, res) => res.json(db.getKeys()));
 
+// ── UNLOCK (déblocage après paiement) ───────────────────────
+router.post("/unlock/:id", apiAuth, (req, res) => {
+  const { id } = req.params;
+  const { by } = req.body;
+  
+  try {
+    // Vérifier que l'utilisateur existe dans la base de données
+    const userExists = db.userExists(id);
+    if (!userExists) {
+      return res.status(404).json({ success: false, error: 'Utilisateur non trouvé' });
+    }
+    
+    // Marquer l'utilisateur comme débloqué pour les téléchargements payants
+    db.unlockUser(id);
+    
+    console.log(`✅ Utilisateur ${id} débloqué par ${by}`);
+    
+    res.json({ 
+      success: true, 
+      message: `Accès débloqué pour l'utilisateur ${id}` 
+    });
+    
+  } catch (error) {
+    console.error('❌ Erreur unlock:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Erreur lors du déblocage' 
+    });
+  }
+});
+
 // ── DOWNLOADS ─────────────────────────────────────────────
 router.get("/downloads", (req, res) => res.json(db.getDownloads()));
 
