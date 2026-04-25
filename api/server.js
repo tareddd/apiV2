@@ -109,8 +109,10 @@ app.get("/auth/me", (req, res) => {
   const banned  = db.isBanned(u.id);
   const limited = db.isRatelimited(u.id);
   const info    = db.getRatelimitInfo(u.id);
+  const owners  = (process.env.OWNERS || "").split(",").map(s => s.trim());
+  const role    = owners.includes(u.id) ? "owner" : "member";
   res.json({
-    loggedIn: true, user: u,
+    loggedIn: true, user: u, role,
     access: !banned && !limited,
     banned, ratelimited: limited,
     until: info ? new Date(info.until).toISOString() : null

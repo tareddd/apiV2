@@ -59,5 +59,22 @@ module.exports = {
     save(db);
   },
   getKeys()     { return db.keys; },
-  getUserKeys() { return db.userKeys; }
+  getUserKeys() { return db.userKeys; },
+
+  // ── DOWNLOADS ──────────────────────────────────────────
+  addDownload(item) {
+    const id = Date.now().toString();
+    const entry = { id, ...item, createdAt: Date.now() };
+    if (!db.downloads) db.downloads = {};
+    db.downloads[id] = entry;
+    save(db);
+    return entry;
+  },
+  removeDownload(id) {
+    if (db.downloads) delete db.downloads[id];
+    save(db);
+  },
+  getDownloads() {
+    return Object.values(db.downloads || {}).sort((a,b) => b.createdAt - a.createdAt);
+  }
 };

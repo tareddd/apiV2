@@ -82,4 +82,25 @@ router.post("/keys/reset/:id", apiAuth, (req, res) => {
 
 router.get("/keys", apiAuth, (req, res) => res.json(db.getKeys()));
 
+// ── DOWNLOADS ─────────────────────────────────────────────
+router.get("/downloads", (req, res) => res.json(db.getDownloads()));
+
+router.post("/downloads", (req, res) => {
+  if (!req.session || !req.session.user) return res.status(401).json({ error: "Non connecté" });
+  const owners = (process.env.OWNERS || "").split(",").map(s => s.trim());
+  if (!owners.includes(req.session.user.id)) return res.status(403).json({ error: "Pas owner" });
+  const { name, desc, image, url, price } = req.body;
+  if (!name || !url) return res.status(400).json({ error: "name et url requis" });
+  const item = db.addDownload({ name, desc: desc||"", image: image||"", url, price: price||"Free" });
+  res.json({ success: true, item });
+});
+
+router.delete("/downloads/:id", (req, res) => {
+  if (!req.session || !req.session.user) return res.status(401).json({ error: "Non connecté" });
+  const owners = (process.env.OWNERS || "").split(",").map(s => s.trim());
+  if (!owners.includes(req.session.user.id)) return res.status(403).json({ error: "Pas owner" });
+  db.removeDownload(req.params.id);
+  res.json({ success: true });
+});
+
 module.exports = router;

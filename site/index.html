@@ -114,8 +114,31 @@
   <!-- DOWNLOAD -->
   <div id="page-download" class="page hidden">
     <div class="page-hdr"><h1>Téléchargements</h1><p>Tout ce dont tu as besoin pour jouer</p></div>
-    <div class="dl-grid" id="dl-grid">
-      <!-- Rempli par JS depuis downloads.js -->
+    <div class="dl-grid" id="dl-grid"></div>
+    <!-- Bouton + flottant (owner seulement) -->
+    <button class="fab hidden" id="fab-add" onclick="openAddModal()" title="Ajouter un téléchargement">+</button>
+  </div>
+
+  <!-- Modal ajout download -->
+  <div class="modal-overlay hidden" id="modal-overlay" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h2>Ajouter un téléchargement</h2>
+      <div class="modal-form">
+        <label>Nom *</label>
+        <input type="text" id="dl-name" placeholder="FN Private Launcher"/>
+        <label>Description</label>
+        <input type="text" id="dl-desc" placeholder="Lance Fortnite Private en un clic"/>
+        <label>Image (URL)</label>
+        <input type="text" id="dl-image" placeholder="https://..."/>
+        <label>Lien de téléchargement *</label>
+        <input type="text" id="dl-url" placeholder="https://github.com/.../fichier.exe"/>
+        <label>Prix</label>
+        <input type="text" id="dl-price" placeholder="Free"/>
+      </div>
+      <div class="modal-btns">
+        <button class="btn-ghost" onclick="closeModal()">Annuler</button>
+        <button class="btn-primary" onclick="submitDownload()">Ajouter</button>
+      </div>
     </div>
   </div>
 

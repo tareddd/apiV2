@@ -84,6 +84,8 @@ async function copyKey(){
 }
 
 // ── Auth Discord ──────────────────────────────────────────
+let currentRole = "member";
+
 async function initAuth(){
   const main=document.getElementById("main-content");
   const login=document.getElementById("login-screen");
@@ -94,11 +96,11 @@ async function initAuth(){
     const res=await fetch("/auth/me");
     data=await res.json();
   }catch(_){
-    // API inaccessible → affiche le site directement
     main.classList.remove("hidden");
     login.classList.add("hidden");
     blocked.classList.add("hidden");
     showPage("home");
+    loadDownloads();
     return;
   }
 
@@ -113,7 +115,6 @@ async function initAuth(){
     blocked.classList.remove("hidden");
     main.classList.add("hidden");
     login.classList.add("hidden");
-
     if(data.banned){
       document.getElementById("blocked-icon").textContent="🔒";
       document.getElementById("blocked-title").textContent="Accès refusé";
@@ -127,6 +128,8 @@ async function initAuth(){
     return;
   }
 
+  currentRole = data.role || "member";
+
   // Accès OK
   main.classList.remove("hidden");
   login.classList.add("hidden");
@@ -136,13 +139,107 @@ async function initAuth(){
   const avatar=u.avatar
     ?`https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.png?size=64`
     :`https://cdn.discordapp.com/embed/avatars/0.png`;
+
+  const roleBadge = currentRole === "owner"
+    ? `<span class="role-badge role-owner">Owner</span>`
+    : `<span class="role-badge role-member">Member</span>`;
+
   document.getElementById("nav-user").innerHTML=`
     <img class="user-avatar" src="${avatar}" alt=""/>
     <span class="user-name">${u.username}</span>
+    ${roleBadge}
     <a href="/auth/logout" class="btn-logout">Déco</a>
   `;
 
   showPage("home");
+  loadDownloads();
+}
+
+// ── Downloads ─────────────────────────────────────────────
+async function loadDownloads(){
+  const grid=document.getElementById("dl-grid");
+  const fab=document.getElementById("fab-add");
+  if(!grid) return;
+
+  // Affiche toujours le FAB
+  if(fab) fab.classList.remove("hidden");
+
+  try{
+    const res=await fetch("/api/downloads");
+    const items=await res.json();
+    renderDownloads(items);
+  }catch(_){
+    grid.innerHTML=`<p style="color:var(--muted);text-align:center;padding:40px">Aucun téléchargement disponible.</p>`;
+  }
+}
+
+function renderDownloads(items){
+  const grid=document.getElementById("dl-grid");
+  if(!grid) return;
+  if(!items.length){
+    grid.innerHTML=`<p style="color:var(--muted);text-align:center;padding:40px;grid-column:1/-1">Aucun téléchargement pour l'instant.</p>`;
+    return;
+  }
+  grid.innerHTML=items.map(d=>`
+    <div class="dl-card">
+      ${d.image?`<img class="dl-card-img" src="${d.image}" alt="${d.name}" onerror="this.style.display='none'"/>`:""}
+      <span class="dl-price ${d.price==="Free"||!d.price?"dl-price-free":"dl-price-paid"}">${d.price||"Free"}</span>
+      <h2>${d.name}</h2>
+      ${d.desc?`<p class="dl-desc">${d.desc}</p>`:""}
+      <a href="${d.url}" class="btn-primary full" download>⬇️ Télécharger</a>
+      ${adminUnlocked?`<button class="dl-delete" onclick="deleteDownload('${d.id}')">Supprimer</button>`:""}
+    </div>
+  `).join("");
+}
+
+async function deleteDownload(id){
+  if(!confirm("Supprimer ce téléchargement ?")) return;
+  await fetch(`/api/downloads/${id}`,{method:"DELETE"});
+  loadDownloads();
+}
+
+// ── Modal ajout ───────────────────────────────────────────
+const ADMIN_CREDS = { user: "dma", pass: "APIV2DMASITE" };
+let adminUnlocked = false;
+
+function openAddModal(){
+  if(!adminUnlocked){
+    const user = prompt("Nom d'utilisateur :");
+    if(!user) return;
+    const pass = prompt("Mot de passe :");
+    if(user === ADMIN_CREDS.user && pass === ADMIN_CREDS.pass){
+      adminUnlocked = true;
+    } else {
+      alert("Identifiants incorrects.");
+      return;
+    }
+  }
+  document.getElementById("modal-overlay").classList.remove("hidden");
+}
+function closeModal(){
+  document.getElementById("modal-overlay").classList.add("hidden");
+}
+async function submitDownload(){
+  const name=document.getElementById("dl-name").value.trim();
+  const desc=document.getElementById("dl-desc").value.trim();
+  const image=document.getElementById("dl-image").value.trim();
+  const url=document.getElementById("dl-url").value.trim();
+  const price=document.getElementById("dl-price").value.trim()||"Free";
+  if(!name||!url){alert("Nom et lien requis.");return;}
+  const res=await fetch("/api/downloads",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({name,desc,image,url,price})
+  });
+  const d=await res.json();
+  if(d.success){
+    closeModal();
+    // Reset form
+    ["dl-name","dl-desc","dl-image","dl-url","dl-price"].forEach(id=>document.getElementById(id).value="");
+    loadDownloads();
+  } else {
+    alert(d.error||"Erreur");
+  }
 }
 
 initAuth();
