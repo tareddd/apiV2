@@ -87,7 +87,23 @@ module.exports = {
   // ── UNLOCK (déblocage après paiement) ─────────────────────
   // Vérifie si un utilisateur existe (a une clé ou est dans la base)
   userExists(userId) {
-    return !!db.userKeys[userId] || !!db.banned[userId] || !!db.ratelimited[userId];
+    // Vérifie dans toutes les sections où un utilisateur pourrait exister
+    return !!db.userKeys[userId] || // a une clé assignée
+           !!db.banned[userId] || // est banni
+           !!db.ratelimited[userId] || // est ratelimité
+           !!db.unlocked[userId] || // est déjà débloqué
+           // Vérifie aussi dans les clés inversées
+           Object.values(db.keys || {}).some(key => key.userId === userId);
+  },
+  // Crée un utilisateur s'il n'existe pas encore
+  ensureUserExists(userId) {
+    if (!this.userExists(userId)) {
+      // Crée une entrée utilisateur minimale
+      db.userKeys[userId] = null; // Pas encore de clé mais existe dans la base
+      save(db);
+      return true;
+    }
+    return false;
   },
   // Débloque un utilisateur pour les téléchargements payants
   unlockUser(userId) {

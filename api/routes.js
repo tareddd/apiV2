@@ -88,20 +88,21 @@ router.post("/unlock/:id", apiAuth, (req, res) => {
   const { by } = req.body;
   
   try {
-    // Vérifier que l'utilisateur existe dans la base de données
-    const userExists = db.userExists(id);
-    if (!userExists) {
-      return res.status(404).json({ success: false, error: 'Utilisateur non trouvé' });
-    }
+    // Créer l'utilisateur s'il n'existe pas encore
+    const wasCreated = db.ensureUserExists(id);
     
     // Marquer l'utilisateur comme débloqué pour les téléchargements payants
     db.unlockUser(id);
+    
+    const message = wasCreated ? 
+      `Utilisateur ${id} créé et débloqué par ${by}` : 
+      `Accès débloqué pour l'utilisateur ${id}`;
     
     console.log(`✅ Utilisateur ${id} débloqué par ${by}`);
     
     res.json({ 
       success: true, 
-      message: `Accès débloqué pour l'utilisateur ${id}` 
+      message: message 
     });
     
   } catch (error) {
