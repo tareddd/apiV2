@@ -10,7 +10,12 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 function callApi(method, endpoint, body = null) {
   return new Promise((resolve, reject) => {
-    const url = new URL(API_BASE + "/api" + endpoint);
+    const baseUrl = API_BASE;
+    if (!baseUrl || baseUrl.includes('API_URL=')) {
+      reject(new Error('API_BASE non configuré correctement'));
+      return;
+    }
+    const url = new URL(baseUrl + "/api" + endpoint);
     const payload = body ? JSON.stringify(body) : null;
     const options = {
       hostname: url.hostname,
