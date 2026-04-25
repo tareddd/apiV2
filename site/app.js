@@ -230,7 +230,7 @@ function renderDownloads(items){
         <p class="dl-details-text">${d.details || d.desc || "Aucune description détaillée disponible."}</p>
       </div>
       
-      ${d.price && d.price !== "Free" ? 
+      ${d.price && d.price !== "Free" && d.price !== "0" && d.price !== 0 ? 
   `<button class="btn-primary full" onclick="event.stopPropagation(); processPayment('${d.id}', '${d.name}', '${d.price}')">💳 Payer ${d.price}$</button>` :
   `<button class="btn-primary full" onclick="event.stopPropagation(); downloadWithKeyCheck('${d.url}', '${d.name}')">⬇️ Télécharger</button>`
 }
