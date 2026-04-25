@@ -115,9 +115,10 @@
   <div id="page-download" class="page hidden">
     <div class="page-hdr"><h1>Téléchargements</h1><p>Tout ce dont tu as besoin pour jouer</p></div>
     <div class="dl-grid" id="dl-grid"></div>
-    <!-- Bouton + flottant (owner seulement) -->
-    <button class="fab hidden" id="fab-add" onclick="openAddModal()" title="Ajouter un téléchargement">+</button>
   </div>
+
+  <!-- FAB flottant — toujours visible -->
+  <button class="fab hidden" id="fab-add" onclick="openAddModal()" title="Ajouter">+</button>
 
   <!-- Modal ajout download -->
   <div class="modal-overlay hidden" id="modal-overlay" onclick="closeModal()">
