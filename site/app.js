@@ -216,21 +216,35 @@ function renderDownloads(items){
     return;
   }
   grid.innerHTML=items.map(d=>`
-    <div class="dl-card">
+    <div class="dl-card" onclick="toggleDetails('${d.id}')" style="cursor: pointer;">
       ${d.image?`<img class="dl-card-img" src="${d.image}" alt="${d.name}" onerror="this.style.display='none'"/>`:""}
-      <span class="dl-price ${d.price==="Free"||!d.price?"dl-price-free":"dl-price-paid"}">${d.price||"Free"}</span>
+      <span class="dl-price ${d.price==="15"?"dl-price-paid-15":d.price==="Free"||!d.price?"dl-price-free":"dl-price-paid"}">${d.price==="15"?"PAYANT 15$":d.price||"Free"}</span>
       <h2>${d.name}</h2>
-      ${d.desc?`<p class="dl-desc">${d.desc}</p>`:""}
       ${d.game?`<p class="dl-note">🎮 Catégorie: ${getGameName(d.game)}</p>`:'<p class="dl-note">⚠️ Pas de catégorie</p>'}
-      <button class="btn-primary full" onclick="downloadWithKeyCheck('${d.url}', '${d.name}')">⬇️ Télécharger</button>
+      
+      <!-- Section détails (cachée par défaut) -->
+      <div id="details-${d.id}" class="dl-details hidden">
+        <h3 class="dl-details-title">${d.name}</h3>
+        <p class="dl-details-text">${d.details || d.desc || "Aucune description détaillée disponible."}</p>
+      </div>
+      
+      <button class="btn-primary full" onclick="event.stopPropagation(); downloadWithKeyCheck('${d.url}', '${d.name}')">⬇️ Télécharger</button>
       ${adminUnlocked?`
-        <div style="display:flex;gap:8px;margin-top:8px;">
+        <div style="display:flex;gap:8px;margin-top:8px;" onclick="event.stopPropagation();">
           <button class="dl-edit" onclick="editCategory('${d.id}', '${d.game || ''}')">Modifier catégorie</button>
           <button class="dl-delete" onclick="deleteDownload('${d.id}')">Supprimer</button>
         </div>
       `:""}
     </div>
   `).join("");
+}
+
+// Fonction pour afficher/cacher les détails d'un produit
+function toggleDetails(id) {
+  const detailsElement = document.getElementById(`details-${id}`);
+  if (detailsElement) {
+    detailsElement.classList.toggle('hidden');
+  }
 }
 
 async function deleteDownload(id){
