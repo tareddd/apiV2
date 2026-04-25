@@ -202,7 +202,7 @@ function renderDownloads(items){
       <span class="dl-price ${d.price==="Free"||!d.price?"dl-price-free":"dl-price-paid"}">${d.price||"Free"}</span>
       <h2>${d.name}</h2>
       ${d.desc?`<p class="dl-desc">${d.desc}</p>`:""}
-      <a href="${d.url}" class="btn-primary full" download>⬇️ Télécharger</a>
+      <button class="btn-primary full" onclick="downloadWithKeyCheck('${d.url}', '${d.name}')">⬇️ Télécharger</button>
       ${adminUnlocked?`<button class="dl-delete" onclick="deleteDownload('${d.id}')">Supprimer</button>`:""}
     </div>
   `).join("");
@@ -212,6 +212,30 @@ async function deleteDownload(id){
   if(!confirm("Supprimer ce téléchargement ?")) return;
   await fetch(`/api/downloads/${id}`,{method:"DELETE"});
   loadDownloads();
+}
+
+// ── Téléchargement avec vérification de clé ────────────────────────
+async function downloadWithKeyCheck(url, name){
+  // Si aucune clé n'a été générée, rediriger vers la page de génération
+  if(!currentKey){
+    alert("Vous devez d'abord générer votre clé d'accès !");
+    showPage('generator');
+    return;
+  }
+  
+  // Demander la clé à l'utilisateur
+  const enteredKey = prompt(`Veuillez entrer votre clé pour télécharger ${name}:`);
+  if(!enteredKey) return;
+  
+  // Vérifier la clé
+  if(enteredKey !== currentKey){
+    alert("Clé incorrecte ! Veuillez générer une clé valide.");
+    showPage('generator');
+    return;
+  }
+  
+  // Si la clé est correcte, lancer le téléchargement
+  window.open(url, '_blank');
 }
 
 // ── Modal ajout ───────────────────────────────────────────
@@ -242,7 +266,20 @@ async function submitDownload(){
   const game=document.getElementById("dl-game").value.trim();
   const url=document.getElementById("dl-url").value.trim();
   const price=document.getElementById("dl-price").value.trim()||"Free";
-  if(!name||!url||!game){alert("Nom, lien et catégorie de jeu requis.");return;}
+  
+  // Validation améliorée
+  if(!name||!url){
+    alert("Nom et lien requis.");
+    return;
+  }
+  if(!game){
+    alert("Veuillez sélectionner une catégorie de jeu.");
+    return;
+  }
+  
+  // Debug: afficher les données envoyées
+  console.log("Données envoyées:", {name,desc,image,game,url,price});
+  
   const res=await fetch("/api/downloads",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
@@ -255,7 +292,7 @@ async function submitDownload(){
     ["dl-name","dl-desc","dl-image","dl-game","dl-url","dl-price"].forEach(id=>document.getElementById(id).value="");
     loadDownloads();
   } else {
-    alert(d.error||"Erreur");
+    alert(d.error||"Erreur lors de l'ajout du téléchargement.");
   }
 }
 
