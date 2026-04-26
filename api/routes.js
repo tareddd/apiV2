@@ -145,4 +145,195 @@ router.delete("/downloads/:id", (req, res) => {
   res.json({ success: true });
 });
 
+// ── PERMISSIONS ───────────────────────────────────────────
+router.post("/permissions/admin/:id", apiAuth, (req, res) => {
+  const { id } = req.params;
+  const { action } = req.body;
+  // Pour l'instant, on simule juste une réponse
+  res.json({ success: true, message: `Admin ${action} pour ${id}` });
+});
+
+router.post("/permissions/mod/:id", apiAuth, (req, res) => {
+  const { id } = req.params;
+  const { action } = req.body;
+  res.json({ success: true, message: `Mod ${action} pour ${id}` });
+});
+
+router.post("/permissions/vip/:id", apiAuth, (req, res) => {
+  const { id } = req.params;
+  const { action, duration } = req.body;
+  res.json({ success: true, message: `VIP ${action} pour ${id} (${duration || 30} jours)` });
+});
+
+// ── SEARCH ──────────────────────────────────────────────────
+router.get("/search/user", apiAuth, (req, res) => {
+  const { q } = req.query;
+  // Simulation de recherche
+  res.json({ success: true, results: [] });
+});
+
+router.get("/search/bykey", apiAuth, (req, res) => {
+  const { key } = req.query;
+  const userId = db.validateKey(key);
+  res.json({ success: true, user: userId ? { id: userId } : null });
+});
+
+// ── STATUS ──────────────────────────────────────────────────
+router.get("/health", (req, res) => {
+  res.json({ success: true, health: { status: "ok", uptime: Date.now() } });
+});
+
+router.get("/status", (req, res) => {
+  res.json({ success: true, status: { api: "running", version: "1.0.0" } });
+});
+
+router.get("/ban/status/:id", apiAuth, (req, res) => {
+  const { id } = req.params;
+  res.json({ success: true, banned: db.isBanned(id) });
+});
+
+router.get("/ratelimit/status/:id", apiAuth, (req, res) => {
+  const { id } = req.params;
+  res.json({ success: true, ratelimited: db.isRatelimited(id) });
+});
+
+router.get("/user/:id/activity", apiAuth, (req, res) => {
+  const { id } = req.params;
+  res.json({ success: true, activity: { lastSeen: new Date().toISOString() } });
+});
+
+router.get("/user/:id/subscription", apiAuth, (req, res) => {
+  const { id } = req.params;
+  res.json({ success: true, subscription: { status: "none" } });
+});
+
+router.get("/user/:id/usage", apiAuth, (req, res) => {
+  const { id } = req.params;
+  res.json({ success: true, stats: { downloads: 0 } });
+});
+
+router.get("/user/:id/keyhistory", apiAuth, (req, res) => {
+  const { id } = req.params;
+  res.json({ success: true, history: [] });
+});
+
+router.get("/user/:id/loginhistory", apiAuth, (req, res) => {
+  const { id } = req.params;
+  res.json({ success: true, history: [] });
+});
+
+router.get("/user/:id/payments", apiAuth, (req, res) => {
+  const { id } = req.params;
+  res.json({ success: true, payments: [] });
+});
+
+// ── MASS OPERATIONS ──────────────────────────────────────────
+router.post("/mass/ban", apiAuth, (req, res) => {
+  const { ids } = req.body;
+  let count = 0;
+  ids.forEach(id => {
+    if (!db.isBanned(id)) {
+      db.banUser(id, req.body.by || "api");
+      count++;
+    }
+  });
+  res.json({ success: true, count });
+});
+
+router.post("/mass/unban", apiAuth, (req, res) => {
+  const { ids } = req.body;
+  let count = 0;
+  ids.forEach(id => {
+    if (db.isBanned(id)) {
+      db.unbanUser(id);
+      count++;
+    }
+  });
+  res.json({ success: true, count });
+});
+
+router.post("/mass/keyreset", apiAuth, (req, res) => {
+  const { ids } = req.body;
+  let count = 0;
+  ids.forEach(id => {
+    if (db.hasKey(id)) {
+      db.resetKey(id);
+      count++;
+    }
+  });
+  res.json({ success: true, count });
+});
+
+router.delete("/keys/expired", apiAuth, (req, res) => {
+  res.json({ success: true, count: 0 });
+});
+
+router.delete("/keys/suspended", apiAuth, (req, res) => {
+  res.json({ success: true, count: 0 });
+});
+
+router.post("/keys/backup", apiAuth, (req, res) => {
+  const backupId = Date.now().toString();
+  res.json({ success: true, backup_id: backupId });
+});
+
+router.post("/keys/restore", apiAuth, (req, res) => {
+  res.json({ success: true, count: 0 });
+});
+
+router.get("/keys/export", apiAuth, (req, res) => {
+  res.json({ success: true, download_url: "#" });
+});
+
+router.post("/keys/import", apiAuth, (req, res) => {
+  res.json({ success: true, count: 0 });
+});
+
+// ── STATS ────────────────────────────────────────────────────
+router.get("/stats/server", apiAuth, (req, res) => {
+  res.json({ success: true, stats: { uptime: Date.now(), memory: "ok" } });
+});
+
+router.get("/stats/keys", apiAuth, (req, res) => {
+  const keys = db.getKeys();
+  const active = Object.values(keys).filter(k => k.active).length;
+  res.json({ success: true, stats: { total: Object.keys(keys).length, active } });
+});
+
+router.get("/stats/bans", apiAuth, (req, res) => {
+  const bans = db.getBanned();
+  res.json({ success: true, stats: { total: Object.keys(bans).length } });
+});
+
+router.get("/stats/activity", apiAuth, (req, res) => {
+  res.json({ success: true, stats: { active: 0 } });
+});
+
+router.get("/stats/daily", apiAuth, (req, res) => {
+  res.json({ success: true, stats: { date: new Date().toISOString(), users: 0 } });
+});
+
+router.get("/stats/weekly", apiAuth, (req, res) => {
+  res.json({ success: true, stats: { week: 1, users: 0 } });
+});
+
+router.get("/stats/monthly", apiAuth, (req, res) => {
+  res.json({ success: true, stats: { month: 1, users: 0 } });
+});
+
+router.get("/stats/topusers", apiAuth, (req, res) => {
+  const { limit = 10 } = req.query;
+  res.json({ success: true, users: [] });
+});
+
+router.get("/stats/newusers", apiAuth, (req, res) => {
+  const { days = 7 } = req.query;
+  res.json({ success: true, users: [] });
+});
+
+router.get("/stats/expiringkeys", apiAuth, (req, res) => {
+  const { days = 7 } = req.query;
+  res.json({ success: true, keys: [] });
+});
+
 module.exports = router;
