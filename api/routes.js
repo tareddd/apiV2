@@ -169,14 +169,25 @@ router.delete("/downloads/:id", (req, res) => {
 // ── PERMISSIONS ───────────────────────────────────────────
 router.post("/permissions/admin/:id", apiAuth, (req, res) => {
   const { id } = req.params;
-  const { action } = req.body;
+  const { action, username, password } = req.body;
   
   try {
     if (action === "give") {
       db.addAdmin(id, req.body.by || "api");
-      res.json({ success: true, message: `Admin donné à ${id}` });
+      
+      // Si des identifiants sont fournis, les stocker
+      if (username && password) {
+        db.setAdminCredentials(id, username, password);
+        res.json({ 
+          success: true, 
+          message: `Admin donné à ${id} avec identifiants: ${username}` 
+        });
+      } else {
+        res.json({ success: true, message: `Admin donné à ${id}` });
+      }
     } else if (action === "remove") {
       db.removeAdmin(id);
+      db.removeAdminCredentials(id);
       res.json({ success: true, message: `Admin retiré à ${id}` });
     } else {
       res.status(400).json({ success: false, error: "Action invalide" });
@@ -196,6 +207,43 @@ router.post("/permissions/vip/:id", apiAuth, (req, res) => {
   const { id } = req.params;
   const { action, duration } = req.body;
   res.json({ success: true, message: `VIP ${action} pour ${id} (${duration || 30} jours)` });
+});
+
+// ── ADMIN LOGIN ───────────────────────────────────────────
+router.post("/admin/login", (req, res) => {
+  const { username, password } = req.body;
+  
+  if (!username || !password) {
+    return res.status(400).json({ success: false, error: "Nom d'utilisateur et mot de passe requis" });
+  }
+  
+  const userId = db.validateAdminCredentials(username, password);
+  
+  if (!userId) {
+    return res.status(401).json({ success: false, error: "Identifiants invalides" });
+  }
+  
+  // Créer une session admin
+  if (!req.session) {
+    req.session = {};
+  }
+  
+  req.session.user = {
+    id: userId,
+    username: username,
+    isAdmin: true,
+    loginMethod: "admin_credentials"
+  };
+  
+  res.json({ 
+    success: true, 
+    message: "Connexion admin réussie",
+    user: {
+      id: userId,
+      username: username,
+      isAdmin: true
+    }
+  });
 });
 
 // ── SEARCH ──────────────────────────────────────────────────

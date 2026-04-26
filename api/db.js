@@ -8,7 +8,7 @@ function save(db) {
   fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
 }
 
-let db = Object.assign({ banned:{}, ratelimited:{}, userKeys:{}, keys:{}, unlocked:{}, admins:{} }, load());
+let db = Object.assign({ banned:{}, ratelimited:{}, userKeys:{}, keys:{}, unlocked:{}, admins:{}, adminCredentials:{} }, load());
 
 module.exports = {
   // ── BAN ──────────────────────────────────────────────
@@ -146,5 +146,39 @@ module.exports = {
   // Obtient la liste des admins
   getAdmins() {
     return db.admins;
+  },
+
+  // ── ADMIN CREDENTIALS ─────────────────────────────────────
+  // Définit les identifiants de connexion pour un admin
+  setAdminCredentials(userId, username, password) {
+    db.adminCredentials[userId] = { 
+      username, 
+      password, 
+      createdAt: Date.now(),
+      active: true 
+    };
+    save(db);
+  },
+  // Supprime les identifiants d'un admin
+  removeAdminCredentials(userId) {
+    delete db.adminCredentials[userId];
+    save(db);
+  },
+  // Vérifie les identifiants d'un admin
+  validateAdminCredentials(username, password) {
+    for (const [userId, creds] of Object.entries(db.adminCredentials)) {
+      if (creds.username === username && creds.password === password && creds.active) {
+        return userId;
+      }
+    }
+    return null;
+  },
+  // Obtient les identifiants d'un admin
+  getAdminCredentials(userId) {
+    return db.adminCredentials[userId];
+  },
+  // Obtient tous les identifiants admins
+  getAllAdminCredentials() {
+    return db.adminCredentials;
   }
 };
