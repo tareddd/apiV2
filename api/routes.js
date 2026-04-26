@@ -119,8 +119,15 @@ router.get("/downloads", (req, res) => res.json(db.getDownloads()));
 
 router.post("/downloads", (req, res) => {
   if (!req.session || !req.session.user) return res.status(401).json({ error: "Non connecté" });
+  
+  // Vérifie si l'utilisateur est owner ou admin
   const owners = (process.env.OWNERS || "").split(",").map(s => s.trim());
-  if (!owners.includes(req.session.user.id)) return res.status(403).json({ error: "Pas owner" });
+  const userId = req.session.user.id;
+  
+  if (!owners.includes(userId) && !db.isAdmin(userId)) {
+    return res.status(403).json({ error: "Permissions insuffisantes" });
+  }
+  
   const { name, desc, image, game, url, price } = req.body;
   if (!name || !url) return res.status(400).json({ error: "name et url requis" });
   const item = db.addDownload({ name, desc: desc||"", image: image||"", game: game||"", url, price: price||"Free" });
@@ -129,8 +136,15 @@ router.post("/downloads", (req, res) => {
 
 router.put("/downloads/:id", (req, res) => {
   if (!req.session || !req.session.user) return res.status(401).json({ error: "Non connecté" });
+  
+  // Vérifie si l'utilisateur est owner ou admin
   const owners = (process.env.OWNERS || "").split(",").map(s => s.trim());
-  if (!owners.includes(req.session.user.id)) return res.status(403).json({ error: "Pas owner" });
+  const userId = req.session.user.id;
+  
+  if (!owners.includes(userId) && !db.isAdmin(userId)) {
+    return res.status(403).json({ error: "Permissions insuffisantes" });
+  }
+  
   const { game } = req.body;
   const updated = db.updateDownload(req.params.id, { game });
   if (!updated) return res.status(404).json({ error: "Téléchargement non trouvé" });
@@ -139,8 +153,15 @@ router.put("/downloads/:id", (req, res) => {
 
 router.delete("/downloads/:id", (req, res) => {
   if (!req.session || !req.session.user) return res.status(401).json({ error: "Non connecté" });
+  
+  // Vérifie si l'utilisateur est owner ou admin
   const owners = (process.env.OWNERS || "").split(",").map(s => s.trim());
-  if (!owners.includes(req.session.user.id)) return res.status(403).json({ error: "Pas owner" });
+  const userId = req.session.user.id;
+  
+  if (!owners.includes(userId) && !db.isAdmin(userId)) {
+    return res.status(403).json({ error: "Permissions insuffisantes" });
+  }
+  
   db.removeDownload(req.params.id);
   res.json({ success: true });
 });
@@ -149,8 +170,20 @@ router.delete("/downloads/:id", (req, res) => {
 router.post("/permissions/admin/:id", apiAuth, (req, res) => {
   const { id } = req.params;
   const { action } = req.body;
-  // Pour l'instant, on simule juste une réponse
-  res.json({ success: true, message: `Admin ${action} pour ${id}` });
+  
+  try {
+    if (action === "give") {
+      db.addAdmin(id, req.body.by || "api");
+      res.json({ success: true, message: `Admin donné à ${id}` });
+    } else if (action === "remove") {
+      db.removeAdmin(id);
+      res.json({ success: true, message: `Admin retiré à ${id}` });
+    } else {
+      res.status(400).json({ success: false, error: "Action invalide" });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, error: "Erreur lors de la modification des permissions" });
+  }
 });
 
 router.post("/permissions/mod/:id", apiAuth, (req, res) => {

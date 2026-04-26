@@ -8,7 +8,7 @@ function save(db) {
   fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
 }
 
-let db = Object.assign({ banned:{}, ratelimited:{}, userKeys:{}, keys:{}, unlocked:{} }, load());
+let db = Object.assign({ banned:{}, ratelimited:{}, userKeys:{}, keys:{}, unlocked:{}, admins:{} }, load());
 
 module.exports = {
   // ── BAN ──────────────────────────────────────────────
@@ -125,5 +125,26 @@ module.exports = {
       db.unlocked[userId].active = false;
       save(db);
     }
+  },
+
+  // ── ADMIN PERMISSIONS ───────────────────────────────────
+  // Ajoute un utilisateur comme admin
+  addAdmin(userId, grantedBy = "system") {
+    db.admins[userId] = { grantedAt: Date.now(), grantedBy, active: true };
+    save(db);
+  },
+  // Retire les permissions admin d'un utilisateur
+  removeAdmin(userId) {
+    delete db.admins[userId];
+    save(db);
+  },
+  // Vérifie si un utilisateur est admin
+  isAdmin(userId) {
+    const admin = db.admins[userId];
+    return admin && admin.active;
+  },
+  // Obtient la liste des admins
+  getAdmins() {
+    return db.admins;
   }
 };
