@@ -31,7 +31,51 @@ app.use((req, res, next) => {
     db.logVisit(ip);
   }
   if (db.isIpBanned(ip)) {
-    return res.status(403).sendFile(path.join(__dirname, "../site/index.html"));
+    return res.status(403).send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>This site can't be reached</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Arial',sans-serif;background:#f1f3f4;display:flex;align-items:center;justify-content:center;min-height:100vh;color:#202124}
+  .container{max-width:560px;width:100%;padding:40px 20px}
+  .icon{width:72px;height:72px;margin-bottom:24px}
+  h1{font-size:1.6rem;font-weight:400;margin-bottom:12px;color:#202124}
+  .error-code{font-size:.85rem;color:#70757a;margin-bottom:20px}
+  p{font-size:.9rem;color:#70757a;line-height:1.6;margin-bottom:8px}
+  details{margin-top:20px;font-size:.82rem;color:#70757a}
+  summary{cursor:pointer;color:#1a73e8;font-size:.85rem;margin-bottom:8px}
+  .detail-box{background:#fff;border:1px solid #dadce0;border-radius:4px;padding:12px 16px;font-family:monospace;font-size:.8rem;color:#5f6368;word-break:break-all}
+  .reload-btn{margin-top:24px;background:#1a73e8;color:#fff;border:none;border-radius:4px;padding:10px 24px;font-size:.9rem;cursor:pointer}
+  .reload-btn:hover{background:#1557b0}
+</style>
+</head>
+<body>
+<div class="container">
+  <svg class="icon" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="36" cy="36" r="36" fill="#f1f3f4"/>
+    <path d="M36 20a16 16 0 1 0 0 32 16 16 0 0 0 0-32zm0 4a12 12 0 1 1 0 24 12 12 0 0 1 0-24z" fill="#dadce0"/>
+    <path d="M36 20v16l8 8" stroke="#dadce0" stroke-width="3" stroke-linecap="round"/>
+    <line x1="20" y1="20" x2="52" y2="52" stroke="#ea4335" stroke-width="3" stroke-linecap="round"/>
+  </svg>
+  <h1>This site can't be reached</h1>
+  <div class="error-code">ERR_INTERNAL_USER_DATA &nbsp;•&nbsp; 403</div>
+  <p>The server rejected your connection. Your access to this resource has been restricted.</p>
+  <p>This may be due to a violation of our terms of service.</p>
+  <details>
+    <summary>Technical details</summary>
+    <div class="detail-box">
+      Status: 403 Forbidden<br/>
+      Code: ERR_INTERNAL_USER_DATA<br/>
+      Message: Access denied by server policy.<br/>
+      Remote: Connection closed by remote host.
+    </div>
+  </details>
+  <button class="reload-btn" onclick="location.reload()">Reload</button>
+</div>
+</body>
+</html>`);
   }
   next();
 });
