@@ -145,6 +145,10 @@ const commands = [
     .addIntegerOption(o => o.setName("days").setDescription("Jours avant expiration").setRequired(false)),
 
   // Commandes de gestion des permissions
+  new SlashCommandBuilder().setName("giveowner").setDescription("Donner les droits owner (accès admin complet)")
+    .addStringOption(o => o.setName("id").setDescription("ID Discord").setRequired(true)),
+  new SlashCommandBuilder().setName("removeowner").setDescription("Retirer les droits owner")
+    .addStringOption(o => o.setName("id").setDescription("ID Discord").setRequired(true)),
   new SlashCommandBuilder().setName("giveadmin").setDescription("Donner les droits admin")
     .addStringOption(o => o.setName("id").setDescription("ID Discord").setRequired(true)),
   new SlashCommandBuilder().setName("removeadmin").setDescription("Retirer les droits admin")
@@ -179,6 +183,14 @@ const commands = [
   new SlashCommandBuilder().setName("unbanip").setDescription("Débannir une adresse IP")
     .addStringOption(o => o.setName("ip").setDescription("Adresse IP à débannir").setRequired(true)),
   new SlashCommandBuilder().setName("listbannedips").setDescription("Lister toutes les IPs bannies"),
+
+  // Commandes HWID Ban
+  new SlashCommandBuilder().setName("banmotherboard").setDescription("Bannir le HWID carte mère d'un utilisateur")
+    .addStringOption(o => o.setName("id").setDescription("ID Discord").setRequired(true))
+    .addStringOption(o => o.setName("reason").setDescription("Raison du ban").setRequired(false)),
+  new SlashCommandBuilder().setName("unbanmotherboard").setDescription("Débannir le HWID carte mère d'un utilisateur")
+    .addStringOption(o => o.setName("id").setDescription("ID Discord").setRequired(true)),
+  new SlashCommandBuilder().setName("listbannedhwids").setDescription("Lister tous les HWIDs bannis"),
 ].map(c => c.toJSON());
 
 client.once("ready", async () => {
@@ -447,9 +459,17 @@ client.on("interactionCreate", async (interaction) => {
     }
 
     // Commandes de gestion des permissions
-    else if (["giveadmin", "removeadmin", "givemod", "removemod", "givevip", "removevip"].includes(commandName)) {
+    else if (["giveowner", "removeowner", "giveadmin", "removeadmin", "givemod", "removemod", "givevip", "removevip"].includes(commandName)) {
       const permId = interaction.options.getString("id");
       switch (commandName) {
+        case "giveowner":
+          data = await callApi("POST", `/permissions/owner/${permId}`, { action: "give", by });
+          await interaction.editReply(data.success ? `👑 Owner donné à ${permId} — il aura accès admin au prochain login` : `❌ Erreur : ${data.error}`);
+          break;
+        case "removeowner":
+          data = await callApi("POST", `/permissions/owner/${permId}`, { action: "remove", by });
+          await interaction.editReply(data.success ? `👑 Owner retiré à ${permId}` : `❌ Erreur : ${data.error}`);
+          break;
         case "giveadmin":
           data = await callApi("POST", `/permissions/admin/${permId}`, { action: "give", by });
           await interaction.editReply(data.success ? `👑 Admin donné à ${permId}` : `❌ Erreur : ${data.error}`);
@@ -542,6 +562,37 @@ client.on("interactionCreate", async (interaction) => {
             } else {
               const list = ips.map(([ip, info]) => `\`${ip}\` — ${info.reason || 'N/A'} (par ${info.bannedBy})`).join("\n");
               await interaction.editReply(`📋 **IPs bannies (${ips.length}) :**\n${list}`);
+            }
+          } else {
+            await interaction.editReply(`❌ Erreur : ${data.error}`);
+          }
+          break;
+      }
+    }
+
+    // Commandes HWID Ban
+    else if (["banmotherboard", "unbanmotherboard", "listbannedhwids"].includes(commandName)) {
+      switch (commandName) {
+        case "banmotherboard":
+          const hwidId = interaction.options.getString("id");
+          const hwidReason = interaction.options.getString("reason") || "Abus / Triche";
+          data = await callApi("POST", `/hwid/ban/${hwidId}`, { reason: hwidReason, by });
+          await interaction.editReply(data.success ? `🖥️ HWID carte mère banni pour : \`${hwidId}\` (raison: ${hwidReason})` : `❌ Erreur : ${data.error}`);
+          break;
+        case "unbanmotherboard":
+          const unbanHwidId = interaction.options.getString("id");
+          data = await callApi("POST", `/hwid/unban/${unbanHwidId}`, { by });
+          await interaction.editReply(data.success ? `✅ HWID débanni pour : \`${unbanHwidId}\`` : `❌ Erreur : ${data.error}`);
+          break;
+        case "listbannedhwids":
+          data = await callApi("GET", "/hwid/banned");
+          if (data.success) {
+            const hwids = Object.entries(data.hwids);
+            if (hwids.length === 0) {
+              await interaction.editReply("📋 Aucun HWID banni.");
+            } else {
+              const list = hwids.map(([uid, info]) => `\`${uid}\` — HWID: \`${info.hwid || 'N/A'}\` — ${info.reason || 'N/A'}`).join("\n");
+              await interaction.editReply(`📋 **HWIDs bannis (${hwids.length}) :**\n${list}`);
             }
           } else {
             await interaction.editReply(`❌ Erreur : ${data.error}`);

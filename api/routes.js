@@ -4,6 +4,52 @@ const { v4: uuidv4 } = require("uuid");
 const db = require("./db");
 const { apiAuth } = require("./middleware");
 
+// ── OWNER PERMISSIONS ────────────────────────────────────
+router.post("/permissions/owner/:id", apiAuth, (req, res) => {
+  const { id } = req.params;
+  const { action, by } = req.body;
+  try {
+    if (action === "give") {
+      db.addOwner(id, by || "api");
+      res.json({ success: true });
+    } else if (action === "remove") {
+      db.removeOwner(id);
+      res.json({ success: true });
+    } else {
+      res.status(400).json({ success: false, error: "Action invalide" });
+    }
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// ── HWID BAN ──────────────────────────────────────────────
+router.post("/hwid/ban/:id", apiAuth, (req, res) => {
+  const { id } = req.params;
+  const { reason, by } = req.body;
+  db.banHwid(id, reason || "Abus / Triche", by || "api");
+  res.json({ success: true });
+});
+
+router.post("/hwid/unban/:id", apiAuth, (req, res) => {
+  const { id } = req.params;
+  db.unbanHwid(id);
+  res.json({ success: true });
+});
+
+router.get("/hwid/banned", apiAuth, (req, res) => {
+  res.json({ success: true, hwids: db.getBannedHwids() });
+});
+
+// Enregistrer le HWID d'un utilisateur (appelé par le launcher)
+router.post("/hwid/register", (req, res) => {
+  const { userId, hwid } = req.body;
+  if (!userId || !hwid) return res.status(400).json({ error: "userId et hwid requis" });
+  if (db.isHwidBanned(userId)) return res.json({ allowed: false, reason: "hwid_banned" });
+  db.registerHwid(userId, hwid);
+  res.json({ allowed: true });
+});
+
 // ── ADMIN SITE (session-based, owner/admin only) ──────────
 function requireAdminSession(req, res, next) {
   if (!req.session || !req.session.user) return res.status(401).json({ error: "Non connecté" });
@@ -46,6 +92,20 @@ router.post("/admin/unbanip", requireAdminSession, (req, res) => {
   if (!ip) return res.status(400).json({ error: "IP requise" });
   if (!db.isIpBanned(ip)) return res.status(404).json({ error: "IP non bannie" });
   db.unbanIp(ip);
+  res.json({ success: true });
+});
+
+router.post("/admin/banhwid", requireAdminSession, (req, res) => {
+  const { userId, reason } = req.body;
+  if (!userId) return res.status(400).json({ error: "userId requis" });
+  db.banHwid(userId, reason || "Abus / Triche", req.session.user.username || req.session.user.id);
+  res.json({ success: true });
+});
+
+router.post("/admin/unbanhwid", requireAdminSession, (req, res) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: "userId requis" });
+  db.unbanHwid(userId);
   res.json({ success: true });
 });
 

@@ -174,7 +174,8 @@ app.get("/auth/me", (req, res) => {
   const limited = db.isRatelimited(u.id);
   const info    = db.getRatelimitInfo(u.id);
   const owners  = (process.env.OWNERS || "").split(",").map(s => s.trim());
-  const role    = owners.includes(u.id) ? "owner" : "member";
+  const isDbOwner = db.isOwner(u.id);
+  const role    = (owners.includes(u.id) || isDbOwner) ? "owner" : "member";
   const isAdmin = db.isAdmin(u.id);
   res.json({
     loggedIn: true, user: u, role,

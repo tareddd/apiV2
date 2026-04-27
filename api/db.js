@@ -8,7 +8,7 @@ function save(db) {
   fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
 }
 
-let db = Object.assign({ banned:{}, ratelimited:{}, userKeys:{}, keys:{}, unlocked:{}, admins:{}, adminCredentials:{}, purchases:{}, bannedIps:{} }, load());
+let db = Object.assign({ banned:{}, ratelimited:{}, userKeys:{}, keys:{}, unlocked:{}, admins:{}, owners:{}, adminCredentials:{}, purchases:{}, bannedIps:{}, bannedHwids:{}, hwidMap:{} }, load());
 
 module.exports = {
   // ── IP BAN ────────────────────────────────────────────
@@ -182,6 +182,41 @@ module.exports = {
       save(db);
     }
   },
+
+  // ── OWNER PERMISSIONS ─────────────────────────────────────
+  addOwner(userId, grantedBy = "system") {
+    db.owners[userId] = { grantedAt: Date.now(), grantedBy, active: true };
+    // Un owner est aussi admin
+    db.admins[userId] = { grantedAt: Date.now(), grantedBy, active: true };
+    save(db);
+  },
+  removeOwner(userId) {
+    delete db.owners[userId];
+    delete db.admins[userId];
+    save(db);
+  },
+  isOwner(userId) {
+    const o = db.owners[userId];
+    return o && o.active;
+  },
+  getOwners() { return db.owners; },
+
+  // ── HWID BAN ──────────────────────────────────────────────
+  registerHwid(userId, hwid) {
+    db.hwidMap[userId] = hwid;
+    save(db);
+  },
+  banHwid(userId, reason = "Abus / Triche", bannedBy = "system") {
+    const hwid = db.hwidMap[userId] || null;
+    db.bannedHwids[userId] = { hwid, reason, bannedBy, bannedAt: Date.now() };
+    save(db);
+  },
+  unbanHwid(userId) {
+    delete db.bannedHwids[userId];
+    save(db);
+  },
+  isHwidBanned(userId) { return !!db.bannedHwids[userId]; },
+  getBannedHwids() { return db.bannedHwids; },
 
   // ── ADMIN PERMISSIONS ───────────────────────────────────
   // Ajoute un utilisateur comme admin

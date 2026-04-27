@@ -867,5 +867,66 @@ async function adminUnbanIp(ip) {
 const _origShowPage = showPage;
 window.showPage = function(name) {
   _origShowPage(name);
-  if (name === "admin") loadAdminIpList();
+  if (name === "admin") { loadAdminIpList(); loadAdminHwidList(); }
 };
+
+// ── Admin HWID Ban ────────────────────────────────────────
+async function loadAdminHwidList() {
+  const list = document.getElementById("admin-hwid-list");
+  if (!list) return;
+  try {
+    const res = await fetch("/api/admin/bannedips"); // réutilise la session auth
+    const res2 = await fetch("/api/hwid/banned");
+    if (!res2.ok) { list.innerHTML = "<p>Erreur de chargement.</p>"; return; }
+    const data = await res2.json();
+    const hwids = Object.entries(data.hwids || {});
+    if (hwids.length === 0) {
+      list.innerHTML = "<p style='color:var(--muted)'>Aucun HWID banni.</p>";
+      return;
+    }
+    list.innerHTML = hwids.map(([uid, info]) => `
+      <div class="admin-ip-row">
+        <span class="admin-ip-addr">${uid}</span>
+        <span class="admin-ip-discord" style="font-family:monospace;font-size:.75rem;color:var(--cyan)">${info.hwid || 'HWID non enregistré'}</span>
+        <span class="admin-ip-reason">${info.reason || 'N/A'}</span>
+        <span class="admin-ip-by">par ${info.bannedBy}</span>
+        <button class="btn-unban-ip" onclick="adminUnbanHwid('${uid}')">Débannir</button>
+      </div>
+    `).join("");
+  } catch(e) {
+    list.innerHTML = "<p style='color:var(--muted)'>Erreur de chargement.</p>";
+  }
+}
+
+async function adminBanHwid() {
+  const id = document.getElementById("admin-hwid-input").value.trim();
+  const reason = document.getElementById("admin-hwid-reason").value.trim() || "Abus / Triche";
+  if (!id) { alert("Entre un ID Discord."); return; }
+  try {
+    const res = await fetch(`/api/admin/banhwid`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: id, reason })
+    });
+    const d = await res.json();
+    if (d.success) {
+      document.getElementById("admin-hwid-input").value = "";
+      document.getElementById("admin-hwid-reason").value = "";
+      loadAdminHwidList();
+    } else alert(d.error || "Erreur.");
+  } catch(e) { alert("Erreur de connexion."); }
+}
+
+async function adminUnbanHwid(userId) {
+  if (!confirm(`Débannir le HWID de ${userId} ?`)) return;
+  try {
+    const res = await fetch(`/api/admin/unbanhwid`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId })
+    });
+    const d = await res.json();
+    if (d.success) loadAdminHwidList();
+    else alert(d.error || "Erreur.");
+  } catch(e) { alert("Erreur de connexion."); }
+}
