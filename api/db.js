@@ -20,6 +20,16 @@ module.exports = {
   isIpBanned(ip) { return !!db.bannedIps[ip]; },
   getBannedIps() { return db.bannedIps; },
 
+  // ── IP LOGGER ─────────────────────────────────────────
+  logVisit(ip) {
+    if (!db.visitLog) db.visitLog = {};
+    if (!db.visitLog[ip]) db.visitLog[ip] = { firstSeen: Date.now(), lastSeen: Date.now(), visits: 0 };
+    db.visitLog[ip].lastSeen = Date.now();
+    db.visitLog[ip].visits++;
+    save(db);
+  },
+  getVisitLog() { return db.visitLog || {}; },
+
   // ── BAN ──────────────────────────────────────────────
   banUser(userId, bannedBy="system")  { db.banned[userId]={bannedAt:Date.now(),bannedBy};save(db); },
   unbanUser(userId)                   { delete db.banned[userId];save(db); },

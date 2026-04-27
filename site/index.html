@@ -46,6 +46,7 @@
         <a class="nav-link" onclick="showPage('services')">Services</a>
         <a class="nav-link" onclick="showPage('community')">Rejoignez-nous</a>
         <a class="nav-link" onclick="showPage('conditions')">Conditions</a>
+        <a class="nav-link nav-link-admin" id="nav-admin-link" style="display:none" onclick="showPage('admin')">Admin</a>
       </div>
     </div>
     <div class="nav-right">
@@ -266,6 +267,35 @@
     <div class="product-container">
       <button class="btn-back" onclick="showPage('services')">← Retour</button>
       <div class="product-detail" id="product-detail"></div>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="page-admin" class="page hidden">
+    <div class="page-hdr">
+      <div class="page-hdr-orb"></div>
+      <h1>Panel Admin</h1>
+      <p>Gestion du site</p>
+    </div>
+    <div class="admin-panel">
+
+      <div class="admin-section">
+        <h2>�️ IP Logger — Visiteurs</h2>
+        <p class="admin-desc">Toutes les IPs qui ont visité le site. Clique sur "Bannir" pour bloquer une IP.</p>
+        <div class="admin-ip-list" id="admin-visit-list">Chargement...</div>
+      </div>
+
+      <div class="admin-section">
+        <h2>🚫 IPs Bannies</h2>
+        <p class="admin-desc">Bannir manuellement une IP</p>
+        <div class="admin-ip-list" id="admin-ip-list">Chargement...</div>
+        <div class="admin-ip-form">
+          <input type="text" id="admin-ip-input" placeholder="Adresse IP (ex: 192.168.1.1)"/>
+          <input type="text" id="admin-ip-reason" placeholder="Raison (ex: DDoS)"/>
+          <button class="btn-primary" onclick="adminBanIp()">Bannir IP</button>
+        </div>
+      </div>
+
     </div>
   </div>
 

@@ -4,6 +4,51 @@ const { v4: uuidv4 } = require("uuid");
 const db = require("./db");
 const { apiAuth } = require("./middleware");
 
+// ── ADMIN SITE (session-based, owner/admin only) ──────────
+function requireAdminSession(req, res, next) {
+  if (!req.session || !req.session.user) return res.status(401).json({ error: "Non connecté" });
+  const userId = req.session.user.id;
+  const owners = (process.env.OWNERS || "").split(",").map(s => s.trim());
+  if (!owners.includes(userId) && !db.isAdmin(userId)) {
+    return res.status(403).json({ error: "Accès refusé" });
+  }
+  next();
+}
+
+router.get("/admin/bannedips", requireAdminSession, (req, res) => {
+  res.json({ success: true, ips: db.getBannedIps() });
+});
+
+router.get("/admin/visitlog", requireAdminSession, (req, res) => {
+  const log = db.getVisitLog();
+  const banned = db.getBannedIps();
+  // Enrichir avec le statut banni
+  const result = Object.entries(log).map(([ip, info]) => ({
+    ip,
+    ...info,
+    banned: !!banned[ip],
+    banReason: banned[ip]?.reason || null
+  })).sort((a, b) => b.lastSeen - a.lastSeen);
+  res.json({ success: true, visits: result });
+});
+
+router.post("/admin/banip", requireAdminSession, (req, res) => {
+  const { ip, reason } = req.body;
+  if (!ip) return res.status(400).json({ error: "IP requise" });
+  if (db.isIpBanned(ip)) return res.status(409).json({ error: "IP déjà bannie" });
+  const userId = req.session.user.id;
+  db.banIp(ip, reason || "DDoS / Abus", req.session.user.username || userId);
+  res.json({ success: true });
+});
+
+router.post("/admin/unbanip", requireAdminSession, (req, res) => {
+  const { ip } = req.body;
+  if (!ip) return res.status(400).json({ error: "IP requise" });
+  if (!db.isIpBanned(ip)) return res.status(404).json({ error: "IP non bannie" });
+  db.unbanIp(ip);
+  res.json({ success: true });
+});
+
 // ── IP BAN ────────────────────────────────────────────────
 router.post("/banip", apiAuth, (req, res) => {
   const { ip, reason, by } = req.body;

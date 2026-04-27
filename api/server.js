@@ -26,6 +26,10 @@ app.use(session({
 // ── IP Ban middleware ─────────────────────────────────────
 app.use((req, res, next) => {
   const ip = req.headers["x-forwarded-for"]?.split(",")[0].trim() || req.socket.remoteAddress;
+  // Logger la visite
+  if (!req.path.startsWith("/api") && !req.path.includes(".")) {
+    db.logVisit(ip);
+  }
   if (db.isIpBanned(ip)) {
     return res.status(403).sendFile(path.join(__dirname, "../site/index.html"));
   }
@@ -120,8 +124,10 @@ app.get("/auth/me", (req, res) => {
   const info    = db.getRatelimitInfo(u.id);
   const owners  = (process.env.OWNERS || "").split(",").map(s => s.trim());
   const role    = owners.includes(u.id) ? "owner" : "member";
+  const isAdmin = db.isAdmin(u.id);
   res.json({
     loggedIn: true, user: u, role,
+    isAdmin: isAdmin || role === "owner",
     access: !banned && !limited,
     banned, ratelimited: limited,
     until: info ? new Date(info.until).toISOString() : null

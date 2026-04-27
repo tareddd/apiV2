@@ -285,6 +285,12 @@ async function initAuth(){
   updateNavUser(data.user);
   showPage("home");
   loadDownloads();
+
+  // Afficher le lien Admin si owner ou admin
+  if (data.role === "owner" || data.isAdmin) {
+    const adminLink = document.getElementById("nav-admin-link");
+    if (adminLink) adminLink.style.display = "inline-block";
+  }
 }
 
 function updateNavUser(user){
@@ -749,3 +755,116 @@ async function submitDownload(){
 }
 
 initAuth();
+
+// ── Admin IP Ban ──────────────────────────────────────────
+async function loadAdminIpList() {
+  // Charger le log des visites
+  const visitList = document.getElementById("admin-visit-list");
+  if (visitList) {
+    try {
+      const res = await fetch("/api/admin/visitlog");
+      if (res.ok) {
+        const data = await res.json();
+        const visits = data.visits || [];
+        if (visits.length === 0) {
+          visitList.innerHTML = "<p style='color:var(--muted)'>Aucun visiteur enregistré.</p>";
+        } else {
+          visitList.innerHTML = visits.map(v => `
+            <div class="admin-ip-row">
+              <span class="admin-ip-addr">${v.ip}</span>
+              <span class="admin-ip-reason" style="color:var(--muted)">${v.visits} visite(s)</span>
+              <span class="admin-ip-by">dernière: ${new Date(v.lastSeen).toLocaleString("fr-FR")}</span>
+              ${v.banned
+                ? `<span style="color:var(--err);font-size:.8rem">🚫 Banni</span>`
+                : `<button class="btn-unban-ip" style="background:rgba(239,68,68,.15);color:var(--err)" onclick="adminBanIpDirect('${v.ip}')">Bannir</button>`
+              }
+            </div>
+          `).join("");
+        }
+      }
+    } catch(e) {
+      visitList.innerHTML = "<p style='color:var(--muted)'>Erreur de chargement.</p>";
+    }
+  }
+
+  // Charger les IPs bannies
+  const list = document.getElementById("admin-ip-list");
+  if (list) {
+    try {
+      const res2 = await fetch("/api/admin/bannedips");
+      if (!res2.ok) { list.innerHTML = "<p>Erreur de chargement.</p>"; return; }
+      const data = await res2.json();
+      const ips = Object.entries(data.ips || {});
+      if (ips.length === 0) {
+        list.innerHTML = "<p style='color:var(--muted)'>Aucune IP bannie.</p>";
+      } else {
+        list.innerHTML = ips.map(([ip, info]) => `
+          <div class="admin-ip-row">
+            <span class="admin-ip-addr">${ip}</span>
+            <span class="admin-ip-reason">${info.reason || 'N/A'}</span>
+            <span class="admin-ip-by">par ${info.bannedBy}</span>
+            <button class="btn-unban-ip" onclick="adminUnbanIp('${ip}')">Débannir</button>
+          </div>
+        `).join("");
+      }
+    } catch(e) {
+      list.innerHTML = "<p style='color:var(--muted)'>Erreur de chargement.</p>";
+    }
+  }
+}
+
+async function adminBanIpDirect(ip) {
+  const reason = prompt(`Raison du ban pour ${ip} :`) || "Abus / DDoS";
+  try {
+    const res = await fetch("/api/admin/banip", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ip, reason })
+    });
+    const d = await res.json();
+    if (d.success) loadAdminIpList();
+    else alert(d.error || "Erreur.");
+  } catch(e) { alert("Erreur de connexion."); }
+}
+
+async function adminBanIp() {
+  const ip = document.getElementById("admin-ip-input").value.trim();
+  const reason = document.getElementById("admin-ip-reason").value.trim() || "DDoS / Abus";
+  if (!ip) { alert("Entre une adresse IP."); return; }
+  try {
+    const res = await fetch("/api/admin/banip", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ip, reason })
+    });
+    const d = await res.json();
+    if (d.success) {
+      document.getElementById("admin-ip-input").value = "";
+      document.getElementById("admin-ip-reason").value = "";
+      loadAdminIpList();
+    } else {
+      alert(d.error || "Erreur.");
+    }
+  } catch(e) { alert("Erreur de connexion."); }
+}
+
+async function adminUnbanIp(ip) {
+  if (!confirm(`Débannir l'IP ${ip} ?`)) return;
+  try {
+    const res = await fetch("/api/admin/unbanip", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ip })
+    });
+    const d = await res.json();
+    if (d.success) loadAdminIpList();
+    else alert(d.error || "Erreur.");
+  } catch(e) { alert("Erreur de connexion."); }
+}
+
+// Charger la liste IP quand on va sur la page admin
+const _origShowPage = showPage;
+window.showPage = function(name) {
+  _origShowPage(name);
+  if (name === "admin") loadAdminIpList();
+};

@@ -295,3 +295,24 @@ nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:cent
 .cart-item-date{font-size:.75rem;color:var(--muted);margin:0}
 .btn-download-cart{padding:8px 16px;border-radius:8px;border:none;background:linear-gradient(135deg,#8b5cf6,#6366f1);color:#fff;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .3s;font-family:inherit;margin-top:4px}
 .btn-download-cart:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(139,92,246,.4)}
+
+/* ── ADMIN PANEL ─────────────────────────────────────────── */
+.nav-link-admin { color: var(--warn) !important; }
+.nav-link-admin:hover { color: #fbbf24 !important; }
+
+.admin-panel { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+.admin-section { background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 16px; padding: 28px; margin-bottom: 24px; }
+.admin-section h2 { font-size: 1.2rem; margin-bottom: 6px; }
+.admin-desc { color: var(--muted); font-size: .9rem; margin-bottom: 18px; }
+
+.admin-ip-list { margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
+.admin-ip-row { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; flex-wrap: wrap; }
+.admin-ip-addr { font-family: monospace; font-size: 1rem; color: var(--cyan); flex: 1; min-width: 120px; }
+.admin-ip-reason { color: var(--warn); font-size: .85rem; flex: 2; }
+.admin-ip-by { color: var(--muted); font-size: .8rem; }
+.btn-unban-ip { background: rgba(239,68,68,.15); color: var(--err); border: 1px solid rgba(239,68,68,.3); border-radius: 8px; padding: 6px 14px; cursor: pointer; font-size: .85rem; transition: background .2s; }
+.btn-unban-ip:hover { background: rgba(239,68,68,.3); }
+
+.admin-ip-form { display: flex; gap: 10px; flex-wrap: wrap; }
+.admin-ip-form input { flex: 1; min-width: 160px; background: rgba(255,255,255,.05); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; color: var(--text); font-size: .9rem; outline: none; }
+.admin-ip-form input:focus { border-color: var(--cyan); }
