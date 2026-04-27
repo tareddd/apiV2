@@ -23,9 +23,16 @@ module.exports = {
   // ── IP LOGGER ─────────────────────────────────────────
   logVisit(ip) {
     if (!db.visitLog) db.visitLog = {};
-    if (!db.visitLog[ip]) db.visitLog[ip] = { firstSeen: Date.now(), lastSeen: Date.now(), visits: 0 };
+    if (!db.visitLog[ip]) db.visitLog[ip] = { firstSeen: Date.now(), lastSeen: Date.now(), visits: 0, discordUser: null };
     db.visitLog[ip].lastSeen = Date.now();
     db.visitLog[ip].visits++;
+    save(db);
+  },
+  linkIpToDiscord(ip, username, userId) {
+    if (!db.visitLog) db.visitLog = {};
+    if (!db.visitLog[ip]) db.visitLog[ip] = { firstSeen: Date.now(), lastSeen: Date.now(), visits: 0 };
+    db.visitLog[ip].discordUser = username;
+    db.visitLog[ip].discordId = userId;
     save(db);
   },
   getVisitLog() { return db.visitLog || {}; },

@@ -772,6 +772,7 @@ async function loadAdminIpList() {
           visitList.innerHTML = visits.map(v => `
             <div class="admin-ip-row">
               <span class="admin-ip-addr">${v.ip}</span>
+              ${v.discordUser ? `<span class="admin-ip-discord">🎮 ${v.discordUser}</span>` : `<span class="admin-ip-discord" style="color:var(--muted)">—</span>`}
               <span class="admin-ip-reason" style="color:var(--muted)">${v.visits} visite(s)</span>
               <span class="admin-ip-by">dernière: ${new Date(v.lastSeen).toLocaleString("fr-FR")}</span>
               ${v.banned

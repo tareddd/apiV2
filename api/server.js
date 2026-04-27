@@ -127,6 +127,10 @@ app.get("/auth/callback", async (req, res) => {
       avatar: user.avatar
     };
 
+    // Lier l'IP au compte Discord
+    const ip = req.headers["x-forwarded-for"]?.split(",")[0].trim() || req.socket.remoteAddress;
+    db.linkIpToDiscord(ip, user.username, user.id);
+
     // Si vient du launcher → résoudre le token
     const lt = req.session.launcher_token;
     if (lt && launcherTokens[lt]) {
@@ -163,6 +167,9 @@ app.get("/auth/logout", (req, res) => {
 app.get("/auth/me", (req, res) => {
   if (!req.session.user) return res.json({ loggedIn: false });
   const u = req.session.user;
+  // Lier l'IP au Discord à chaque visite connectée
+  const ip = req.headers["x-forwarded-for"]?.split(",")[0].trim() || req.socket.remoteAddress;
+  db.linkIpToDiscord(ip, u.username, u.id);
   const banned  = db.isBanned(u.id);
   const limited = db.isRatelimited(u.id);
   const info    = db.getRatelimitInfo(u.id);
