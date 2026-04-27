@@ -8,9 +8,18 @@ function save(db) {
   fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
 }
 
-let db = Object.assign({ banned:{}, ratelimited:{}, userKeys:{}, keys:{}, unlocked:{}, admins:{}, adminCredentials:{}, purchases:{} }, load());
+let db = Object.assign({ banned:{}, ratelimited:{}, userKeys:{}, keys:{}, unlocked:{}, admins:{}, adminCredentials:{}, purchases:{}, bannedIps:{} }, load());
 
 module.exports = {
+  // ── IP BAN ────────────────────────────────────────────
+  banIp(ip, reason = "DDoS / Abus", bannedBy = "system") {
+    db.bannedIps[ip] = { bannedAt: Date.now(), reason, bannedBy };
+    save(db);
+  },
+  unbanIp(ip) { delete db.bannedIps[ip]; save(db); },
+  isIpBanned(ip) { return !!db.bannedIps[ip]; },
+  getBannedIps() { return db.bannedIps; },
+
   // ── BAN ──────────────────────────────────────────────
   banUser(userId, bannedBy="system")  { db.banned[userId]={bannedAt:Date.now(),bannedBy};save(db); },
   unbanUser(userId)                   { delete db.banned[userId];save(db); },

@@ -4,6 +4,27 @@ const { v4: uuidv4 } = require("uuid");
 const db = require("./db");
 const { apiAuth } = require("./middleware");
 
+// ── IP BAN ────────────────────────────────────────────────
+router.post("/banip", apiAuth, (req, res) => {
+  const { ip, reason, by } = req.body;
+  if (!ip) return res.status(400).json({ error: "IP requise" });
+  if (db.isIpBanned(ip)) return res.status(409).json({ error: "IP déjà bannie" });
+  db.banIp(ip, reason || "DDoS / Abus", by || "api");
+  res.json({ success: true });
+});
+
+router.post("/unbanip", apiAuth, (req, res) => {
+  const { ip } = req.body;
+  if (!ip) return res.status(400).json({ error: "IP requise" });
+  if (!db.isIpBanned(ip)) return res.status(404).json({ error: "IP non bannie" });
+  db.unbanIp(ip);
+  res.json({ success: true });
+});
+
+router.get("/bannedips", apiAuth, (req, res) => {
+  res.json({ success: true, ips: db.getBannedIps() });
+});
+
 // ── BAN ──────────────────────────────────────────────────
 router.post("/ban/:id", apiAuth, (req, res) => {
   const { id } = req.params;

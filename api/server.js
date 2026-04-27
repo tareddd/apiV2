@@ -23,6 +23,15 @@ app.use(session({
   cookie: { maxAge: 7 * 24 * 3600 * 1000 }
 }));
 
+// ── IP Ban middleware ─────────────────────────────────────
+app.use((req, res, next) => {
+  const ip = req.headers["x-forwarded-for"]?.split(",")[0].trim() || req.socket.remoteAddress;
+  if (db.isIpBanned(ip)) {
+    return res.status(403).sendFile(path.join(__dirname, "../site/index.html"));
+  }
+  next();
+});
+
 // ── Discord OAuth2 ────────────────────────────────────────
 
 app.get("/auth/discord", (req, res) => {

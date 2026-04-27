@@ -171,6 +171,14 @@ const commands = [
   new SlashCommandBuilder().setName("botinfo").setDescription("Informations sur le bot"),
   new SlashCommandBuilder().setName("help").setDescription("Afficher l'aide des commandes")
     .addStringOption(o => o.setName("command").setDescription("Commande spécifique").setRequired(false)),
+
+  // Commandes IP Ban
+  new SlashCommandBuilder().setName("banip").setDescription("Bannir une adresse IP du site")
+    .addStringOption(o => o.setName("ip").setDescription("Adresse IP à bannir").setRequired(true))
+    .addStringOption(o => o.setName("reason").setDescription("Raison du ban").setRequired(false)),
+  new SlashCommandBuilder().setName("unbanip").setDescription("Débannir une adresse IP")
+    .addStringOption(o => o.setName("ip").setDescription("Adresse IP à débannir").setRequired(true)),
+  new SlashCommandBuilder().setName("listbannedips").setDescription("Lister toutes les IPs bannies"),
 ].map(c => c.toJSON());
 
 client.once("ready", async () => {
@@ -506,6 +514,37 @@ client.on("interactionCreate", async (interaction) => {
             await interaction.editReply(cmd ? `❓ **/${cmd.name}**: ${cmd.description}` : `❌ Commande "${specificCommand}" non trouvée`);
           } else {
             await interaction.editReply(`📚 **Aide des commandes**\n\n**Gestion des clés:**\n/generatekey, /revokekey, /extendkey, /upgradekey, /getkey, /checkkey, /listkeys, /expirekey, /suspendkey, /reactivatekey, /transferkey, /duplicatekey\n\n**Statut & Infos:**\n/userstatus, /keyinfo, /banstatus, /ratelimitstatus, /activestatus, /subscriptionstatus, /usagestats, /keyhistory, /loginhistory, /paymentstatus\n\n**Administration:**\n/massban, /massunban, /masskeyreset, /clearexpiredkeys, /clearsuspendedkeys, /backupkeys, /restorekeys, /exportkeys, /importkeys\n\n**Monitoring:**\n/serverstats, /keystats, /banstats, /activestats, /dailystats, /weeklystats, /monthlystats, /topusers, /newusers, /expiringkeys\n\n**Permissions:**\n/giveadmin, /removeadmin, /givemod, /removemod, /givevip, /removevip\n\n**Utilitaires:**\n/searchuser, /findbykey, /validatekey, /systemhealth, /apistatus, /botinfo\n\nUtilise /help <commande> pour plus d'infos sur une commande spécifique.`);
+          }
+          break;
+      }
+    }
+
+    // Commandes IP Ban
+    else if (["banip", "unbanip", "listbannedips"].includes(commandName)) {
+      switch (commandName) {
+        case "banip":
+          const ip = interaction.options.getString("ip");
+          const reason = interaction.options.getString("reason") || "DDoS / Abus";
+          data = await callApi("POST", "/banip", { ip, reason, by });
+          await interaction.editReply(data.success ? `🚫 IP bannie : \`${ip}\` (raison: ${reason})` : `❌ Erreur : ${data.error}`);
+          break;
+        case "unbanip":
+          const unbanIp = interaction.options.getString("ip");
+          data = await callApi("POST", "/unbanip", { ip: unbanIp, by });
+          await interaction.editReply(data.success ? `✅ IP débannie : \`${unbanIp}\`` : `❌ Erreur : ${data.error}`);
+          break;
+        case "listbannedips":
+          data = await callApi("GET", "/bannedips");
+          if (data.success) {
+            const ips = Object.entries(data.ips);
+            if (ips.length === 0) {
+              await interaction.editReply("📋 Aucune IP bannie.");
+            } else {
+              const list = ips.map(([ip, info]) => `\`${ip}\` — ${info.reason || 'N/A'} (par ${info.bannedBy})`).join("\n");
+              await interaction.editReply(`📋 **IPs bannies (${ips.length}) :**\n${list}`);
+            }
+          } else {
+            await interaction.editReply(`❌ Erreur : ${data.error}`);
           }
           break;
       }
