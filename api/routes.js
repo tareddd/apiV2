@@ -195,6 +195,45 @@ router.get("/downloads/:id/comments", (req, res) => {
   res.json(comments || []);
 });
 
+// ── PURCHASES ──────────────────────────────────────────────
+router.post("/purchases", (req, res) => {
+  if (!req.session || !req.session.user) {
+    return res.status(401).json({ error: "Non connecté" });
+  }
+  
+  const { userId, productId, productName, productImage, productUrl, purchaseDate } = req.body;
+  
+  if (!userId || !productId || !productName) {
+    return res.status(400).json({ error: "Données manquantes" });
+  }
+  
+  const purchase = {
+    id: uuidv4(),
+    userId,
+    productId,
+    productName,
+    productImage: productImage || '',
+    productUrl: productUrl || '',
+    purchaseDate: purchaseDate || new Date().toISOString()
+  };
+  
+  const success = db.addPurchase(purchase);
+  if (!success) {
+    return res.status(500).json({ error: "Erreur lors de l'enregistrement" });
+  }
+  
+  res.json({ success: true, purchase });
+});
+
+router.get("/purchases/:userId", (req, res) => {
+  if (!req.session || !req.session.user) {
+    return res.status(401).json({ error: "Non connecté" });
+  }
+  
+  const purchases = db.getUserPurchases(req.params.userId);
+  res.json(purchases);
+});
+
 // ── PERMISSIONS ───────────────────────────────────────────
 router.post("/permissions/admin/:id", apiAuth, (req, res) => {
   const { id } = req.params;

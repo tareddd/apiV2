@@ -55,9 +55,28 @@
         </svg>
         Connexion
       </button>
+      <div class="cart-icon hidden" id="cart-icon" onclick="toggleCart()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+        <span class="cart-badge" id="cart-badge">0</span>
+      </div>
       <div class="nav-user hidden" id="nav-user"></div>
     </div>
   </nav>
+
+  <!-- Cart Dropdown -->
+  <div class="cart-dropdown hidden" id="cart-dropdown">
+    <div class="cart-header">
+      <h3>Mes Achats</h3>
+      <button class="cart-close" onclick="toggleCart()">✕</button>
+    </div>
+    <div class="cart-items" id="cart-items">
+      <p class="cart-empty">Aucun achat pour le moment</p>
+    </div>
+  </div>
 
   <!-- HOME -->
   <div id="page-home" class="page active">

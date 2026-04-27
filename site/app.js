@@ -108,6 +108,96 @@ async function copyKey(){
 let currentRole = "member";
 let currentUserId = null;
 let isLoggedIn = false;
+let userPurchases = [];
+
+// Gestion du panier
+function toggleCart() {
+  const dropdown = document.getElementById('cart-dropdown');
+  dropdown.classList.toggle('hidden');
+}
+
+function updateCartBadge() {
+  const badge = document.getElementById('cart-badge');
+  if (badge) {
+    badge.textContent = userPurchases.length;
+    if (userPurchases.length > 0) {
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+}
+
+function renderCart() {
+  const cartItems = document.getElementById('cart-items');
+  if (!cartItems) return;
+  
+  if (userPurchases.length === 0) {
+    cartItems.innerHTML = '<p class="cart-empty">Aucun achat pour le moment</p>';
+    return;
+  }
+  
+  cartItems.innerHTML = userPurchases.map(purchase => `
+    <div class="cart-item">
+      ${purchase.image ? `<img src="${purchase.image}" alt="${purchase.name}" class="cart-item-img"/>` : ''}
+      <div class="cart-item-info">
+        <h4>${purchase.name}</h4>
+        <p class="cart-item-date">${new Date(purchase.purchaseDate).toLocaleDateString()}</p>
+        <button class="btn-download-cart" onclick="downloadPurchase('${purchase.url}', '${purchase.name}')">
+          ⬇️ Télécharger
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function downloadPurchase(url, name) {
+  if (!url) {
+    alert("Lien de téléchargement non disponible.");
+    return;
+  }
+  window.open(url, '_blank');
+}
+
+async function loadUserPurchases() {
+  if (!isLoggedIn || !currentUserId) return;
+  
+  try {
+    const res = await fetch(`/api/purchases/${currentUserId}`);
+    if (res.ok) {
+      userPurchases = await res.json();
+      updateCartBadge();
+      renderCart();
+    }
+  } catch (e) {
+    console.error("Erreur lors du chargement des achats:", e);
+  }
+}
+
+async function savePurchase(productId, productName, productImage, productUrl) {
+  if (!isLoggedIn || !currentUserId) return;
+  
+  try {
+    const res = await fetch('/api/purchases', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        userId: currentUserId,
+        productId,
+        productName,
+        productImage,
+        productUrl,
+        purchaseDate: new Date().toISOString()
+      })
+    });
+    
+    if (res.ok) {
+      await loadUserPurchases();
+    }
+  } catch (e) {
+    console.error("Erreur lors de la sauvegarde de l'achat:", e);
+  }
+}
 
 async function initAuth(){
   const main=document.getElementById("main-content");
@@ -174,16 +264,20 @@ async function initAuth(){
 function updateNavUser(user){
   const navUser = document.getElementById("nav-user");
   const btnConnexion = document.querySelector(".btn-connexion");
+  const cartIcon = document.getElementById("cart-icon");
   
   if(!user){
     // Pas connecté - afficher le bouton Connexion
     if(navUser) navUser.classList.add("hidden");
     if(btnConnexion) btnConnexion.classList.remove("hidden");
+    if(cartIcon) cartIcon.classList.add("hidden");
     return;
   }
   
-  // Connecté - afficher l'utilisateur
+  // Connecté - afficher l'utilisateur et le panier
   if(btnConnexion) btnConnexion.classList.add("hidden");
+  if(cartIcon) cartIcon.classList.remove("hidden");
+  
   if(navUser){
     const avatar=user.avatar
       ?`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=64`
@@ -201,6 +295,9 @@ function updateNavUser(user){
     `;
     navUser.classList.remove("hidden");
   }
+  
+  // Charger les achats de l'utilisateur
+  loadUserPurchases();
 }
 
 // ── Downloads ─────────────────────────────────────────────
@@ -366,6 +463,10 @@ function changeQuantity(delta) {
 async function buyProduct(productId, productName, price, url) {
   const isFree = !price || price === "Free";
   
+  // Trouver le produit pour obtenir l'image
+  const product = allProducts.find(p => p.id === productId);
+  const productImage = product ? product.image : '';
+  
   if (isFree) {
     // Pour les produits gratuits, demander juste l'email
     const email = prompt("Please enter your email address:");
@@ -376,15 +477,18 @@ async function buyProduct(productId, productName, price, url) {
       return;
     }
     
-    // Simuler le téléchargement
-    alert("Thanks for your purchase!\n\nYour download will start shortly.");
-    
     // Vérifier si l'utilisateur est connecté pour le téléchargement
     if (!isLoggedIn) {
       alert("Please login with Discord to download!");
       window.location.href = "/auth/discord";
       return;
     }
+    
+    // Sauvegarder l'achat
+    await savePurchase(productId, productName, productImage, url);
+    
+    // Simuler le téléchargement
+    alert("Thanks for your purchase!\n\nYour download will start shortly.");
     
     // Lancer le téléchargement
     if (url) {

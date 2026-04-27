@@ -8,7 +8,7 @@ function save(db) {
   fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
 }
 
-let db = Object.assign({ banned:{}, ratelimited:{}, userKeys:{}, keys:{}, unlocked:{}, admins:{}, adminCredentials:{} }, load());
+let db = Object.assign({ banned:{}, ratelimited:{}, userKeys:{}, keys:{}, unlocked:{}, admins:{}, adminCredentials:{}, purchases:{} }, load());
 
 module.exports = {
   // ── BAN ──────────────────────────────────────────────
@@ -97,6 +97,21 @@ module.exports = {
   getComments(downloadId) {
     if (!db.downloads || !db.downloads[downloadId]) return [];
     return db.downloads[downloadId].comments || [];
+  },
+
+  // ── PURCHASES ──────────────────────────────────────────
+  addPurchase(purchase) {
+    if (!db.purchases) db.purchases = {};
+    if (!db.purchases[purchase.userId]) {
+      db.purchases[purchase.userId] = [];
+    }
+    db.purchases[purchase.userId].push(purchase);
+    save(db);
+    return true;
+  },
+  getUserPurchases(userId) {
+    if (!db.purchases || !db.purchases[userId]) return [];
+    return db.purchases[userId].sort((a, b) => new Date(b.purchaseDate) - new Date(a.purchaseDate));
   },
 
   // ── UNLOCK (déblocage après paiement) ─────────────────────
