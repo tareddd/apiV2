@@ -107,6 +107,7 @@ async function copyKey(){
 // ── Auth Discord ──────────────────────────────────────────
 let currentRole = "member";
 let currentUserId = null;
+let isLoggedIn = false;
 
 async function initAuth(){
   const main=document.getElementById("main-content");
@@ -118,18 +119,24 @@ async function initAuth(){
     const res=await fetch("/auth/me");
     data=await res.json();
   }catch(_){
+    // Pas de connexion - afficher le site quand même
     main.classList.remove("hidden");
     login.classList.add("hidden");
     blocked.classList.add("hidden");
     showPage("home");
     loadDownloads();
+    updateNavUser(null);
     return;
   }
 
   if(!data.loggedIn){
-    login.classList.remove("hidden");
-    main.classList.add("hidden");
+    // Pas connecté - afficher le site quand même
+    main.classList.remove("hidden");
+    login.classList.add("hidden");
     blocked.classList.add("hidden");
+    showPage("home");
+    loadDownloads();
+    updateNavUser(null);
     return;
   }
 
@@ -150,6 +157,7 @@ async function initAuth(){
     return;
   }
 
+  isLoggedIn = true;
   currentRole = data.role || "member";
   currentUserId = data.user ? data.user.id : null;
 
@@ -158,24 +166,41 @@ async function initAuth(){
   login.classList.add("hidden");
   blocked.classList.add("hidden");
 
-  const u=data.user;
-  const avatar=u.avatar
-    ?`https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.png?size=64`
-    :`https://cdn.discordapp.com/embed/avatars/0.png`;
-
-  const roleBadge = currentRole === "owner"
-    ? `<span class="role-badge role-owner">Owner</span>`
-    : `<span class="role-badge role-member">Member</span>`;
-
-  document.getElementById("nav-user").innerHTML=`
-    <img class="user-avatar" src="${avatar}" alt=""/>
-    <span class="user-name">${u.username}</span>
-    ${roleBadge}
-    <a href="/auth/logout" class="btn-logout">Déco</a>
-  `;
-
+  updateNavUser(data.user);
   showPage("home");
   loadDownloads();
+}
+
+function updateNavUser(user){
+  const navUser = document.getElementById("nav-user");
+  const btnConnexion = document.querySelector(".btn-connexion");
+  
+  if(!user){
+    // Pas connecté - afficher le bouton Connexion
+    if(navUser) navUser.classList.add("hidden");
+    if(btnConnexion) btnConnexion.classList.remove("hidden");
+    return;
+  }
+  
+  // Connecté - afficher l'utilisateur
+  if(btnConnexion) btnConnexion.classList.add("hidden");
+  if(navUser){
+    const avatar=user.avatar
+      ?`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=64`
+      :`https://cdn.discordapp.com/embed/avatars/0.png`;
+
+    const roleBadge = currentRole === "owner"
+      ? `<span class="role-badge role-owner">Owner</span>`
+      : `<span class="role-badge role-member">Member</span>`;
+
+    navUser.innerHTML=`
+      <img class="user-avatar" src="${avatar}" alt=""/>
+      <span class="user-name">${user.username}</span>
+      ${roleBadge}
+      <a href="/auth/logout" class="btn-logout">Déco</a>
+    `;
+    navUser.classList.remove("hidden");
+  }
 }
 
 // ── Downloads ─────────────────────────────────────────────
@@ -363,20 +388,16 @@ async function saveCategory(id){
 
 // ── Téléchargement avec vérification de clé ────────────────────────
 async function downloadWithKeyCheck(url, name){
-  // Si aucune clé n'a été générée, rediriger vers la page de génération
-  if(!currentKey){
-    alert("Vous devez d'abord générer votre clé d'accès !");
-    showPage('generator');
+  // Vérifier si l'utilisateur est connecté
+  if(!isLoggedIn){
+    alert("Veuillez vous connecter avec Discord pour télécharger !");
+    window.location.href = "/auth/discord";
     return;
   }
   
-  // Demander la clé à l'utilisateur
-  const enteredKey = prompt(`Veuillez entrer votre clé pour télécharger ${name}:`);
-  if(!enteredKey) return;
-  
-  // Vérifier la clé
-  if(enteredKey !== currentKey){
-    alert("Clé incorrecte ! Veuillez générer une clé valide.");
+  // Si aucune clé n'a été générée, rediriger vers la page de génération
+  if(!currentKey){
+    alert("Vous devez d'abord générer votre clé d'accès !");
     showPage('generator');
     return;
   }

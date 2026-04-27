@@ -42,6 +42,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:cent
 .btn-connexion{display:flex;align-items:center;gap:8px;padding:10px 24px;border-radius:8px;border:1px solid rgba(139,92,246,.4);background:rgba(139,92,246,.1);color:#fff;cursor:pointer;font-size:.9rem;font-weight:600;font-family:inherit;transition:all .3s}
 .btn-connexion:hover{background:rgba(139,92,246,.2);border-color:rgba(139,92,246,.6);transform:translateY(-1px)}
 .nav-user{display:flex;align-items:center;gap:8px;font-size:.82rem}
+.nav-user{display:flex;align-items:center;gap:8px;font-size:.82rem}
 .user-avatar{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--cyan)}
 .user-name{color:var(--text);font-weight:600}
 .role-badge{padding:2px 8px;border-radius:20px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
