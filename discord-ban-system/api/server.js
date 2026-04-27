@@ -23,6 +23,15 @@ app.use(session({
   cookie: { maxAge: 7 * 24 * 3600 * 1000 }
 }));
 
+// ── IP Ban middleware ─────────────────────────────────────
+app.use((req, res, next) => {
+  const ip = req.headers["x-forwarded-for"]?.split(",")[0].trim() || req.socket.remoteAddress;
+  if (db.isIpBanned(ip)) {
+    return res.status(403).sendFile(path.join(__dirname, "../site/index.html"));
+  }
+  next();
+});
+
 // ── Discord OAuth2 ────────────────────────────────────────
 
 app.get("/auth/discord", (req, res) => {
@@ -109,8 +118,12 @@ app.get("/auth/me", (req, res) => {
   const banned  = db.isBanned(u.id);
   const limited = db.isRatelimited(u.id);
   const info    = db.getRatelimitInfo(u.id);
+  const owners  = (process.env.OWNERS || "").split(",").map(s => s.trim());
+  const role    = owners.includes(u.id) ? "owner" : "member";
+  const isAdmin = db.isAdmin(u.id);
   res.json({
-    loggedIn: true, user: u,
+    loggedIn: true, user: u, role,
+    isAdmin: isAdmin || role === "owner",
     access: !banned && !limited,
     banned, ratelimited: limited,
     until: info ? new Date(info.until).toISOString() : null

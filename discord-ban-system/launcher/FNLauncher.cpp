@@ -1,4 +1,4 @@
-// FN Private Launcher — Key auth, GLOW style sidebar
+// FN Private Launcher — GLOW style exact
 // cl /EHsc /O2 /Fe:FNPrivateLauncher.exe FNLauncher.cpp wininet.lib user32.lib gdi32.lib comctl32.lib shell32.lib ole32.lib dwmapi.lib /link /SUBSYSTEM:WINDOWS
 #define UNICODE
 #define _UNICODE
@@ -22,20 +22,23 @@
 #pragma comment(lib,"ole32.lib")
 #pragma comment(lib,"dwmapi.lib")
 
-#define C_BG     RGB(15,17,26)
-#define C_SIDE   RGB(20,22,35)
-#define C_BG2    RGB(25,28,42)
-#define C_BG3    RGB(30,33,50)
-#define C_BORDER RGB(40,44,65)
-#define C_ACCENT RGB(108,99,255)
-#define C_CYAN   RGB(0,220,255)
-#define C_TEXT   RGB(230,232,245)
-#define C_MUTED  RGB(100,105,135)
-#define C_OK     RGB(0,220,110)
-#define C_ERR    RGB(255,70,85)
-#define C_WARN   RGB(255,160,0)
-#define SIDE_W   200
-#define HEAD_H   48
+// Palette GLOW exacte
+#define C_BG     RGB(13,15,25)
+#define C_SIDE   RGB(17,20,32)
+#define C_BG2    RGB(22,26,40)
+#define C_BG3    RGB(28,32,50)
+#define C_BORDER RGB(38,44,68)
+#define C_ACCENT RGB(99,102,241)
+#define C_CYAN   RGB(6,182,212)
+#define C_CYAN2  RGB(34,211,238)
+#define C_TEXT   RGB(241,245,249)
+#define C_MUTED  RGB(100,116,139)
+#define C_OK     RGB(16,185,129)
+#define C_ERR    RGB(239,68,68)
+#define C_WARN   RGB(245,158,11)
+#define SIDE_W   210
+#define HEAD_H   52
+
 #define PAGE_KEY    0
 #define PAGE_HOME   1
 #define PAGE_PARAMS 2
@@ -48,6 +51,10 @@
 #define IDE_KEY    20
 #define IDE_PATH   21
 #define IDE_LOGS   22
+
+static const char* API_HOST="localhost";
+static const int   API_PORT=3000;
+static const wchar_t* CFG=L"fnlauncher.cfg";
 
 static const char* API_HOST="localhost";
 static const int   API_PORT=3000;
@@ -157,21 +164,36 @@ static void RR(HDC dc,int x,int y,int w,int h,int r,COLORREF fill,COLORREF brd,i
     HBRUSH ob=(HBRUSH)SelectObject(dc,b);HPEN op=(HPEN)SelectObject(dc,p);
     RoundRect(dc,x,y,x+w,y+h,r,r);SelectObject(dc,ob);SelectObject(dc,op);DeleteObject(b);DeleteObject(p);
 }
+// Bouton LAUNCH GAME cyan — très arrondi comme GLOW
 static void CyanBtn(HDC dc,int x,int y,int w,int h,const wchar_t* txt,bool dis=false){
-    if(dis){RR(dc,x,y,w,h,10,C_BG3,C_BORDER);SetBkMode(dc,TRANSPARENT);SetTextColor(dc,C_MUTED);SelectObject(dc,g_fNorm);RECT r={x,y,x+w,y+h};DrawText(dc,txt,-1,&r,DT_CENTER|DT_VCENTER|DT_SINGLELINE);return;}
-    HRGN rgn=CreateRoundRectRgn(x,y,x+w,y+h,10,10);SelectClipRgn(dc,rgn);
-    for(int i=0;i<h;i++){float t=(float)i/h;HPEN p=CreatePen(PS_SOLID,1,RGB((int)(t*20),(int)(200-t*30),(int)(255-t*20)));HPEN op=(HPEN)SelectObject(dc,p);MoveToEx(dc,x,y+i,NULL);LineTo(dc,x+w,y+i);SelectObject(dc,op);DeleteObject(p);}
+    int rad=h; // rayon = hauteur pour effet pill
+    if(dis){RR(dc,x,y,w,h,rad,C_BG3,C_BORDER);SetBkMode(dc,TRANSPARENT);SetTextColor(dc,C_MUTED);SelectObject(dc,g_fNorm);RECT r={x,y,x+w,y+h};DrawText(dc,txt,-1,&r,DT_CENTER|DT_VCENTER|DT_SINGLELINE);return;}
+    HRGN rgn=CreateRoundRectRgn(x,y,x+w,y+h,rad,rad);SelectClipRgn(dc,rgn);
+    for(int i=0;i<h;i++){
+        float t=(float)i/h;
+        int ri=(int)(6+t*10),gi=(int)(182-t*20),bi=(int)(212-t*15);
+        HPEN p=CreatePen(PS_SOLID,1,RGB(ri,gi,bi));HPEN op=(HPEN)SelectObject(dc,p);
+        MoveToEx(dc,x,y+i,NULL);LineTo(dc,x+w,y+i);SelectObject(dc,op);DeleteObject(p);
+    }
     SelectClipRgn(dc,NULL);DeleteObject(rgn);
-    HPEN pn=CreatePen(PS_SOLID,1,C_CYAN);HBRUSH nb=(HBRUSH)GetStockObject(NULL_BRUSH);SelectObject(dc,nb);SelectObject(dc,pn);RoundRect(dc,x,y,x+w,y+h,10,10);DeleteObject(pn);
-    SetBkMode(dc,TRANSPARENT);SetTextColor(dc,RGB(5,5,15));SelectObject(dc,g_fBig);RECT r={x,y,x+w,y+h};DrawText(dc,txt,-1,&r,DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+    HPEN pn=CreatePen(PS_SOLID,1,C_CYAN2);HBRUSH nb=(HBRUSH)GetStockObject(NULL_BRUSH);SelectObject(dc,nb);SelectObject(dc,pn);RoundRect(dc,x,y,x+w,y+h,rad,rad);DeleteObject(pn);
+    SetBkMode(dc,TRANSPARENT);SetTextColor(dc,RGB(5,10,20));SelectObject(dc,g_fBig);
+    RECT r={x,y,x+w,y+h};DrawText(dc,txt,-1,&r,DT_CENTER|DT_VCENTER|DT_SINGLELINE);
 }
+// Bouton secondaire arrondi
 static void PurpleBtn(HDC dc,int x,int y,int w,int h,const wchar_t* txt,bool dis=false){
-    if(dis){RR(dc,x,y,w,h,10,C_BG3,C_BORDER);SetBkMode(dc,TRANSPARENT);SetTextColor(dc,C_MUTED);SelectObject(dc,g_fNorm);RECT r={x,y,x+w,y+h};DrawText(dc,txt,-1,&r,DT_CENTER|DT_VCENTER|DT_SINGLELINE);return;}
-    HRGN rgn=CreateRoundRectRgn(x,y,x+w,y+h,10,10);SelectClipRgn(dc,rgn);
-    for(int i=0;i<h;i++){float t=(float)i/h;HPEN p=CreatePen(PS_SOLID,1,RGB((int)(108+t*31),(int)(99-t*7),255));HPEN op=(HPEN)SelectObject(dc,p);MoveToEx(dc,x,y+i,NULL);LineTo(dc,x+w,y+i);SelectObject(dc,op);DeleteObject(p);}
+    int rad=h;
+    if(dis){RR(dc,x,y,w,h,rad,C_BG3,C_BORDER);SetBkMode(dc,TRANSPARENT);SetTextColor(dc,C_MUTED);SelectObject(dc,g_fNorm);RECT r={x,y,x+w,y+h};DrawText(dc,txt,-1,&r,DT_CENTER|DT_VCENTER|DT_SINGLELINE);return;}
+    HRGN rgn=CreateRoundRectRgn(x,y,x+w,y+h,rad,rad);SelectClipRgn(dc,rgn);
+    for(int i=0;i<h;i++){
+        float t=(float)i/h;
+        HPEN p=CreatePen(PS_SOLID,1,RGB((int)(99+t*20),(int)(102+t*10),(int)(241-t*20)));
+        HPEN op=(HPEN)SelectObject(dc,p);MoveToEx(dc,x,y+i,NULL);LineTo(dc,x+w,y+i);SelectObject(dc,op);DeleteObject(p);
+    }
     SelectClipRgn(dc,NULL);DeleteObject(rgn);
-    HPEN pn=CreatePen(PS_SOLID,1,C_ACCENT);HBRUSH nb=(HBRUSH)GetStockObject(NULL_BRUSH);SelectObject(dc,nb);SelectObject(dc,pn);RoundRect(dc,x,y,x+w,y+h,10,10);DeleteObject(pn);
-    SetBkMode(dc,TRANSPARENT);SetTextColor(dc,RGB(255,255,255));SelectObject(dc,g_fBig);RECT r={x,y,x+w,y+h};DrawText(dc,txt,-1,&r,DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+    HPEN pn=CreatePen(PS_SOLID,1,C_ACCENT);HBRUSH nb=(HBRUSH)GetStockObject(NULL_BRUSH);SelectObject(dc,nb);SelectObject(dc,pn);RoundRect(dc,x,y,x+w,y+h,rad,rad);DeleteObject(pn);
+    SetBkMode(dc,TRANSPARENT);SetTextColor(dc,RGB(255,255,255));SelectObject(dc,g_fBig);
+    RECT r={x,y,x+w,y+h};DrawText(dc,txt,-1,&r,DT_CENTER|DT_VCENTER|DT_SINGLELINE);
 }
 static bool PtIn(POINT p,RECT r){return p.x>=r.left&&p.x<=r.right&&p.y>=r.top&&p.y<=r.bottom;}
 
@@ -319,18 +341,53 @@ static LRESULT CALLBACK WndProc(HWND hw,UINT msg,WPARAM wp,LPARAM lp){
             SelectObject(dc,g_fSmall);SetTextColor(dc,C_CYAN);TextOut(dc,cx,cy+316,L"Genere ta cle sur : http://localhost:3000  (onglet Generateur)",61);
         }
         if(g_page==PAGE_HOME){
-            std::wstring welcome=L"Bienvenue !";
-            if(!g_username.empty()) welcome=L"Bienvenue, "+g_username+L" !";
+            // Welcome card style GLOW
+            std::wstring welcome=L"Welcome back !";
+            if(!g_username.empty()) welcome=L"Welcome back, "+g_username+L" !";
             SelectObject(dc,g_fTitle);SetTextColor(dc,C_CYAN);
             TextOut(dc,cx,cy,welcome.c_str(),(int)welcome.size());
             SelectObject(dc,g_fNorm);SetTextColor(dc,C_MUTED);
-            TextOut(dc,cx,cy+34,L"FN Private Server — Fortnite Chapter 4",38);
-            // Card launch
-            HBRUSH cb=CreateSolidBrush(C_BG2);RECT card={cx,cy+80,cx+cw,cy+180};FillRect(dc,&card,cb);DeleteObject(cb);
-            HPEN cp=CreatePen(PS_SOLID,1,C_BORDER);HPEN op=(HPEN)SelectObject(dc,cp);Rectangle(dc,card.left,card.top,card.right,card.bottom);SelectObject(dc,op);DeleteObject(cp);
-            SelectObject(dc,g_fBig);SetTextColor(dc,C_ACCENT);TextOut(dc,cx+16,cy+96,L"FN PRIVATE",10);
-            SelectObject(dc,g_fNorm);SetTextColor(dc,C_MUTED);TextOut(dc,cx+16,cy+120,L"Lance Fortnite Private Server",29);
-            SelectObject(dc,g_fSmall);SetTextColor(dc,C_MUTED);TextOut(dc,cx+16,cy+148,L"Configure le chemin dans Parametres avant de lancer.",52);
+            TextOut(dc,cx,cy+36,L"FN Private Server — Fortnite Private",36);
+
+            // Main card
+            RECT card={cx,cy+80,cx+cw,cy+200};
+            {HBRUSH cb=CreateSolidBrush(C_BG2);FillRect(dc,&card,cb);DeleteObject(cb);}
+            {HPEN cp=CreatePen(PS_SOLID,1,C_BORDER);HPEN op=(HPEN)SelectObject(dc,cp);Rectangle(dc,card.left,card.top,card.right,card.bottom);SelectObject(dc,op);DeleteObject(cp);}
+            // Tag badges
+            {HBRUSH tb=CreateSolidBrush(RGB(30,40,70));RECT tr={cx+16,cy+96,cx+110,cy+116};FillRect(dc,&tr,tb);DeleteObject(tb);
+            SelectObject(dc,g_fSmall);SetTextColor(dc,C_CYAN);TextOut(dc,cx+20,cy+98,L"CHAPTER 4",9);}
+            {HBRUSH tb=CreateSolidBrush(RGB(30,40,70));RECT tr={cx+118,cy+96,cx+220,cy+116};FillRect(dc,&tr,tb);DeleteObject(tb);
+            SelectObject(dc,g_fSmall);SetTextColor(dc,C_MUTED);TextOut(dc,cx+122,cy+98,L"FN PROJECT",10);}
+            SelectObject(dc,g_fBig);SetTextColor(dc,C_CYAN);
+            TextOut(dc,cx+16,cy+126,L"Play FN Private Today !",23);
+            SelectObject(dc,g_fNorm);SetTextColor(dc,C_MUTED);
+            TextOut(dc,cx+16,cy+150,L"Experience Fortnite Private With Custom Weapons, Map and More !",63);
+            SelectObject(dc,g_fSmall);SetTextColor(dc,C_MUTED);
+            TextOut(dc,cx+16,cy+174,L"Version v1.0  -  Configure le chemin dans Parametres",52);
+
+            // 4 icone cards en bas style GLOW
+            int cardW=(cw-30)/4, cardY=cy+220;
+            struct{const wchar_t* icon;const wchar_t* title;const wchar_t* sub;}icons[]={
+                {L"$",L"Donations",L"Support the project"},
+                {L"@",L"Discord",L"Join our community"},
+                {L"?",L"Support",L"Get help from team"},
+                {L"*",L"Updates",L"Stay up to date"},
+            };
+            for(int i=0;i<4;i++){
+                int ix=cx+i*(cardW+10);
+                RECT ic={ix,cardY,ix+cardW,cardY+90};
+                HBRUSH ib=CreateSolidBrush(C_BG2);FillRect(dc,&ic,ib);DeleteObject(ib);
+                HPEN ip=CreatePen(PS_SOLID,1,C_BORDER);HPEN op=(HPEN)SelectObject(dc,ip);Rectangle(dc,ic.left,ic.top,ic.right,ic.bottom);SelectObject(dc,op);DeleteObject(ip);
+                // Icone cercle
+                HBRUSH cb=CreateSolidBrush(C_BG3);HPEN np=(HPEN)GetStockObject(NULL_PEN);SelectObject(dc,cb);SelectObject(dc,np);
+                Ellipse(dc,ix+cardW/2-16,cardY+10,ix+cardW/2+16,cardY+42);DeleteObject(cb);
+                SelectObject(dc,g_fBig);SetTextColor(dc,C_CYAN);
+                RECT ir={ix,cardY+10,ix+cardW,cardY+42};DrawText(dc,icons[i].icon,-1,&ir,DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+                SelectObject(dc,g_fSmall);SetTextColor(dc,C_TEXT);
+                RECT tr={ix,cardY+48,ix+cardW,cardY+64};DrawText(dc,icons[i].title,-1,&tr,DT_CENTER|DT_SINGLELINE);
+                SetTextColor(dc,C_MUTED);
+                RECT sr={ix,cardY+64,ix+cardW,cardY+82};DrawText(dc,icons[i].sub,-1,&sr,DT_CENTER|DT_SINGLELINE);
+            }
         }
         if(g_page==PAGE_PARAMS){
             SelectObject(dc,g_fTitle);SetTextColor(dc,C_TEXT);TextOut(dc,cx,cy,L"Parametres",10);
