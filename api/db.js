@@ -84,6 +84,21 @@ module.exports = {
     return Object.values(db.downloads || {}).sort((a,b) => b.createdAt - a.createdAt);
   },
 
+  // ── COMMENTS ──────────────────────────────────────────
+  addComment(downloadId, comment) {
+    if (!db.downloads || !db.downloads[downloadId]) return false;
+    if (!db.downloads[downloadId].comments) {
+      db.downloads[downloadId].comments = [];
+    }
+    db.downloads[downloadId].comments.push(comment);
+    save(db);
+    return true;
+  },
+  getComments(downloadId) {
+    if (!db.downloads || !db.downloads[downloadId]) return [];
+    return db.downloads[downloadId].comments || [];
+  },
+
   // ── UNLOCK (déblocage après paiement) ─────────────────────
   // Vérifie si un utilisateur existe (a une clé ou est dans la base)
   userExists(userId) {

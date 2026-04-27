@@ -166,6 +166,35 @@ router.delete("/downloads/:id", (req, res) => {
   res.json({ success: true });
 });
 
+// ── COMMENTS ──────────────────────────────────────────────
+router.post("/downloads/:id/comment", (req, res) => {
+  const { id } = req.params;
+  const { name, text } = req.body;
+  
+  if (!name || !text) {
+    return res.status(400).json({ error: "name et text requis" });
+  }
+  
+  const comment = {
+    id: uuidv4(),
+    name,
+    text,
+    date: new Date().toISOString()
+  };
+  
+  const success = db.addComment(id, comment);
+  if (!success) {
+    return res.status(404).json({ error: "Produit non trouvé" });
+  }
+  
+  res.json({ success: true, comment });
+});
+
+router.get("/downloads/:id/comments", (req, res) => {
+  const comments = db.getComments(req.params.id);
+  res.json(comments || []);
+});
+
 // ── PERMISSIONS ───────────────────────────────────────────
 router.post("/permissions/admin/:id", apiAuth, (req, res) => {
   const { id } = req.params;

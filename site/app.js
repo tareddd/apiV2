@@ -217,6 +217,9 @@ async function loadDownloads(){
     const res=await fetch("/api/downloads");
     const items=await res.json();
     
+    // Stocker tous les produits pour la page de détails
+    allProducts = items;
+    
     // Debug: afficher les téléchargements reçus
     console.log("Téléchargements reçus:", items);
     console.log("Filtre actuel:", currentGameFilter);
@@ -243,22 +246,12 @@ function renderDownloads(items){
     return;
   }
   grid.innerHTML=items.map(d=>`
-    <div class="dl-card" onclick="toggleDetails('${d.id}')" style="cursor: pointer;">
+    <div class="dl-card" onclick="showProductDetail('${d.id}')" style="cursor: pointer;">
       ${d.image?`<img class="dl-card-img" src="${d.image}" alt="${d.name}" onerror="this.style.display='none'"/>`:""}
-      <span class="dl-price ${d.price && d.price !== "Free" ? "dl-price-paid" : "dl-price-free"}">${d.price && d.price !== "Free" ? d.price + "$" : "Free"}</span>
+      <div class="dl-rating">⭐ 5.0</div>
+      <span class="dl-price ${d.price && d.price !== "Free" ? "dl-price-paid" : "dl-price-free"}">${d.price && d.price !== "Free" ? "€" + d.price : "Free"}</span>
       <h2>${d.name}</h2>
-      ${d.game?`<p class="dl-note">🎮 Catégorie: ${getGameName(d.game)}</p>`:'<p class="dl-note">⚠️ Pas de catégorie</p>'}
-      
-      <!-- Section détails (cachée par défaut) -->
-      <div id="details-${d.id}" class="dl-details hidden">
-        <h3 class="dl-details-title">${d.name}</h3>
-        <p class="dl-details-text">${d.details || d.desc || "Aucune description détaillée disponible."}</p>
-      </div>
-      
-      ${d.price && d.price !== "Free" ? 
-  `<button class="btn-primary full" onclick="event.stopPropagation(); processPayment('${d.id}', '${d.name}', '${d.price}')">💳 Payer ${d.price}$</button>` :
-  `<button class="btn-primary full" onclick="event.stopPropagation(); downloadWithKeyCheck('${d.url}', '${d.name}')">⬇️ Télécharger</button>`
-}
+      ${d.desc?`<p class="dl-desc">${d.desc}</p>`:""}
       ${adminUnlocked?`
         <div style="display:flex;gap:8px;margin-top:8px;" onclick="event.stopPropagation();">
           <button class="dl-edit" onclick="editCategory('${d.id}', '${d.game || ''}')">Modifier catégorie</button>
@@ -274,6 +267,164 @@ function toggleDetails(id) {
   const detailsElement = document.getElementById(`details-${id}`);
   if (detailsElement) {
     detailsElement.classList.toggle('hidden');
+  }
+}
+
+// Afficher la page de détails du produit
+let allProducts = [];
+
+async function showProductDetail(productId) {
+  const product = allProducts.find(p => p.id === productId);
+  if (!product) return;
+  
+  const detailContainer = document.getElementById('product-detail');
+  const isOutOfStock = product.stock === 0;
+  
+  detailContainer.innerHTML = `
+    <div class="product-header">
+      <div class="product-left">
+        <h1>${product.name}</h1>
+        <div class="product-meta">
+          <span class="product-sold">Product sold <strong>${product.sold || 73}</strong> times</span>
+          <span class="product-rating">⭐⭐⭐⭐⭐ 5 (${product.reviews || 11} reviews)</span>
+        </div>
+        ${product.image ? `<img class="product-image" src="${product.image}" alt="${product.name}"/>` : ''}
+        <div class="product-features">
+          <h3>Features:</h3>
+          <ul>
+            <li>✓ Works on ERA</li>
+            <li>✓ You get a free update every time ERA switches fortnite version (updated to 8.51).</li>
+            <li>✓ Join my discord server to learn more: <a href="https://discord.gg/example" target="_blank">https://discord.gg/example</a></li>
+            <li>✓ It is external.</li>
+          </ul>
+        </div>
+        <p class="product-terms">By purchasing any product, you agree to the terms.</p>
+        <p class="product-check">Check it out on my channel: <a href="#" target="_blank">CLICK HERE</a></p>
+      </div>
+      <div class="product-right">
+        <div class="product-price-box">
+          <div class="price-row">
+            <span>Price</span>
+            <span class="price-value">${product.price && product.price !== "Free" ? "€" + product.price : "Free"}</span>
+          </div>
+          <div class="price-row">
+            <span>Delivery Time</span>
+            <span class="delivery-instant">⚡ Instant</span>
+          </div>
+          <div class="price-row">
+            <span>In Stock</span>
+            <span class="stock-value ${isOutOfStock ? 'out-of-stock' : 'in-stock'}">${isOutOfStock ? '✕ 0' : '✓ ∞'}</span>
+          </div>
+          <div class="price-row quantity-row">
+            <span>Quantity</span>
+            <div class="quantity-control">
+              <button onclick="changeQuantity(-1)">-</button>
+              <input type="number" id="quantity" value="1" min="1" readonly/>
+              <button onclick="changeQuantity(1)">+</button>
+            </div>
+          </div>
+          ${isOutOfStock ? 
+            `<button class="btn-buy disabled" disabled>Out of Stock</button>` :
+            `<button class="btn-buy" onclick="buyProduct('${product.id}', '${product.name}', '${product.price}', '${product.url}')">Buy Now</button>`
+          }
+        </div>
+      </div>
+    </div>
+    
+    <div class="product-comments">
+      <h2>Comments</h2>
+      <div class="comment-form">
+        <input type="text" id="comment-name" placeholder="Your name" />
+        <textarea id="comment-text" placeholder="Add a comment..." rows="3"></textarea>
+        <button class="btn-primary" onclick="addComment('${product.id}')">Post Comment</button>
+      </div>
+      <div class="comments-list" id="comments-${product.id}">
+        ${(product.comments || []).map(c => `
+          <div class="comment">
+            <div class="comment-header">
+              <strong>${c.name}</strong>
+              <span class="comment-date">${new Date(c.date).toLocaleDateString()}</span>
+            </div>
+            <p>${c.text}</p>
+          </div>
+        `).join('') || '<p class="no-comments">No comments yet. Be the first!</p>'}
+      </div>
+    </div>
+  `;
+  
+  showPage('product');
+}
+
+function changeQuantity(delta) {
+  const input = document.getElementById('quantity');
+  const current = parseInt(input.value) || 1;
+  const newValue = Math.max(1, current + delta);
+  input.value = newValue;
+}
+
+async function buyProduct(productId, productName, price, url) {
+  const isFree = !price || price === "Free";
+  
+  if (isFree) {
+    // Pour les produits gratuits, demander juste l'email
+    const email = prompt("Please enter your email address:");
+    if (!email) return;
+    
+    if (!email.includes('@')) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+    
+    // Simuler le téléchargement
+    alert("Thanks for your purchase!\n\nYour download will start shortly.");
+    
+    // Vérifier si l'utilisateur est connecté pour le téléchargement
+    if (!isLoggedIn) {
+      alert("Please login with Discord to download!");
+      window.location.href = "/auth/discord";
+      return;
+    }
+    
+    // Lancer le téléchargement
+    if (url) {
+      window.open(url, '_blank');
+    }
+    
+    // Retourner à la page de téléchargements
+    setTimeout(() => {
+      showPage('download');
+    }, 1000);
+  } else {
+    // Pour les produits payants, utiliser le système de paiement existant
+    processPayment(productId, productName, price);
+  }
+}
+
+async function addComment(productId) {
+  const name = document.getElementById('comment-name').value.trim();
+  const text = document.getElementById('comment-text').value.trim();
+  
+  if (!name || !text) {
+    alert("Please fill in both name and comment.");
+    return;
+  }
+  
+  try {
+    const res = await fetch(`/api/downloads/${productId}/comment`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name, text})
+    });
+    
+    if (res.ok) {
+      // Recharger les produits et afficher à nouveau les détails
+      await loadDownloads();
+      showProductDetail(productId);
+    } else {
+      alert("Error posting comment.");
+    }
+  } catch (e) {
+    alert("Error posting comment.");
   }
 }
 
