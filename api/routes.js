@@ -201,9 +201,9 @@ router.post("/purchases", (req, res) => {
     return res.status(401).json({ error: "Non connecté" });
   }
   
-  const { userId, productId, productName, productImage, productUrl, purchaseDate } = req.body;
+  const { userId, productId, name, productName, image, productImage, url, productUrl, date, purchaseDate } = req.body;
   
-  if (!userId || !productId || !productName) {
+  if (!userId || !productId) {
     return res.status(400).json({ error: "Données manquantes" });
   }
   
@@ -211,11 +211,17 @@ router.post("/purchases", (req, res) => {
     id: uuidv4(),
     userId,
     productId,
-    productName,
-    productImage: productImage || '',
-    productUrl: productUrl || '',
-    purchaseDate: purchaseDate || new Date().toISOString()
+    name: name || productName || 'Produit',
+    productName: name || productName || 'Produit',
+    image: image || productImage || '',
+    productImage: image || productImage || '',
+    url: url || productUrl || '',
+    productUrl: url || productUrl || '',
+    date: date || purchaseDate || new Date().toISOString(),
+    purchaseDate: date || purchaseDate || new Date().toISOString()
   };
+  
+  console.log("Enregistrement de l'achat:", purchase);
   
   const success = db.addPurchase(purchase);
   if (!success) {
@@ -231,6 +237,7 @@ router.get("/purchases/:userId", (req, res) => {
   }
   
   const purchases = db.getUserPurchases(req.params.userId);
+  console.log("Achats récupérés pour", req.params.userId, ":", purchases);
   res.json(purchases);
 });
 

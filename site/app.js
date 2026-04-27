@@ -137,25 +137,33 @@ function renderCart() {
     return;
   }
   
-  cartItems.innerHTML = userPurchases.map(purchase => `
-    <div class="cart-item">
-      ${purchase.image ? `<img src="${purchase.image}" alt="${purchase.name}" class="cart-item-img"/>` : ''}
-      <div class="cart-item-info">
-        <h4>${purchase.name}</h4>
-        <p class="cart-item-date">${new Date(purchase.purchaseDate).toLocaleDateString()}</p>
-        <button class="btn-download-cart" onclick="downloadPurchase('${purchase.url}', '${purchase.name}')">
-          ⬇️ Télécharger
-        </button>
+  cartItems.innerHTML = userPurchases.map(purchase => {
+    const name = purchase.name || purchase.productName || 'Produit sans nom';
+    const url = purchase.url || purchase.productUrl || '';
+    const image = purchase.image || purchase.productImage || '';
+    const date = purchase.date || purchase.purchaseDate || new Date().toISOString();
+    
+    return `
+      <div class="cart-item">
+        ${image ? `<img src="${image}" alt="${name}" class="cart-item-img"/>` : ''}
+        <div class="cart-item-info">
+          <h4>${name}</h4>
+          <p class="cart-item-date">${new Date(date).toLocaleDateString()}</p>
+          <button class="btn-download-cart" onclick="downloadPurchase('${url}', '${name}')">
+            ⬇️ Télécharger
+          </button>
+        </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 function downloadPurchase(url, name) {
-  if (!url) {
-    alert("Lien de téléchargement non disponible.");
+  if (!url || url === 'undefined' || url === 'null') {
+    alert("Lien de téléchargement non disponible pour ce produit.");
     return;
   }
+  console.log("Téléchargement de:", name, "URL:", url);
   window.open(url, '_blank');
 }
 
@@ -175,7 +183,18 @@ async function loadUserPurchases() {
 }
 
 async function savePurchase(productId, productName, productImage, productUrl) {
-  if (!isLoggedIn || !currentUserId) return;
+  if (!isLoggedIn || !currentUserId) {
+    console.error("Utilisateur non connecté");
+    return;
+  }
+  
+  console.log("Sauvegarde de l'achat:", {
+    userId: currentUserId,
+    productId,
+    productName,
+    productImage,
+    productUrl
+  });
   
   try {
     const res = await fetch('/api/purchases', {
@@ -184,15 +203,22 @@ async function savePurchase(productId, productName, productImage, productUrl) {
       body: JSON.stringify({
         userId: currentUserId,
         productId,
-        productName,
-        productImage,
-        productUrl,
+        name: productName,
+        productName: productName,
+        image: productImage,
+        productImage: productImage,
+        url: productUrl,
+        productUrl: productUrl,
+        date: new Date().toISOString(),
         purchaseDate: new Date().toISOString()
       })
     });
     
     if (res.ok) {
+      console.log("Achat sauvegardé avec succès");
       await loadUserPurchases();
+    } else {
+      console.error("Erreur lors de la sauvegarde:", await res.text());
     }
   } catch (e) {
     console.error("Erreur lors de la sauvegarde de l'achat:", e);
@@ -463,9 +489,17 @@ function changeQuantity(delta) {
 async function buyProduct(productId, productName, price, url) {
   const isFree = !price || price === "Free";
   
-  // Trouver le produit pour obtenir l'image
+  // Trouver le produit pour obtenir toutes les infos
   const product = allProducts.find(p => p.id === productId);
-  const productImage = product ? product.image : '';
+  
+  if (!product) {
+    alert("Produit introuvable.");
+    return;
+  }
+  
+  const productImage = product.image || '';
+  const productUrl = product.url || url;
+  const finalProductName = product.name || productName;
   
   if (isFree) {
     // Pour les produits gratuits, demander juste l'email
@@ -484,15 +518,17 @@ async function buyProduct(productId, productName, price, url) {
       return;
     }
     
-    // Sauvegarder l'achat
-    await savePurchase(productId, productName, productImage, url);
+    // Sauvegarder l'achat avec toutes les infos
+    await savePurchase(productId, finalProductName, productImage, productUrl);
     
     // Simuler le téléchargement
     alert("Thanks for your purchase!\n\nYour download will start shortly.");
     
     // Lancer le téléchargement
-    if (url) {
-      window.open(url, '_blank');
+    if (productUrl) {
+      window.open(productUrl, '_blank');
+    } else {
+      alert("Lien de téléchargement non disponible.");
     }
     
     // Retourner à la page services
@@ -501,7 +537,7 @@ async function buyProduct(productId, productName, price, url) {
     }, 1000);
   } else {
     // Pour les produits payants, utiliser le système de paiement existant
-    processPayment(productId, productName, price);
+    processPayment(productId, finalProductName, price);
   }
 }
 
