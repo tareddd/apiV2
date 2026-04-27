@@ -225,9 +225,10 @@ async function loadDownloads(){
     console.log("Filtre actuel:", currentGameFilter);
     
     // Filtrer les téléchargements par jeu si un filtre est sélectionné
+    // Sinon afficher TOUS les produits
     const filteredItems = currentGameFilter 
       ? items.filter(item => item.game === currentGameFilter)
-      : items.filter(item => !item.game); // N'afficher que les téléchargements SANS catégorie quand aucun filtre
+      : items; // Afficher TOUS les produits quand aucun filtre
     
     console.log("Téléchargements filtrés:", filteredItems);
     
