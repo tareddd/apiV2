@@ -46,7 +46,6 @@
         <a class="nav-link" onclick="showPage('services')">Services</a>
         <a class="nav-link" onclick="showPage('community')">Rejoignez-nous</a>
         <a class="nav-link" onclick="showPage('conditions')">Conditions</a>
-        <a class="nav-link" onclick="showPage('download')">Télécharger</a>
       </div>
     </div>
     <div class="nav-right">
@@ -205,20 +204,48 @@
     </div>
   </div>
 
-  <!-- DOWNLOAD -->
+  <!-- SERVICES (Downloads) -->
+  <div id="page-services" class="page hidden">
+    <div class="page-hdr">
+      <div class="page-hdr-orb"></div>
+      <h1>Nos Services</h1>
+      <p>Découvrez tous nos produits et services</p>
+    </div>
+    <div class="dl-grid" id="dl-grid"></div>
+  </div>
+
+  <!-- COMMUNITY -->
+  <div id="page-community" class="page hidden">
+    <div class="page-hdr">
+      <div class="page-hdr-orb"></div>
+      <h1>Rejoignez la communauté</h1>
+      <p>Connectez-vous avec d'autres joueurs</p>
+    </div>
+  </div>
+
+  <!-- CONDITIONS -->
+  <div id="page-conditions" class="page hidden">
+    <div class="page-hdr">
+      <div class="page-hdr-orb"></div>
+      <h1>Conditions d'utilisation</h1>
+      <p>Nos termes et conditions</p>
+    </div>
+  </div>
+
+  <!-- DOWNLOAD (kept for backward compatibility, redirects to services) -->
   <div id="page-download" class="page hidden">
     <div class="page-hdr">
       <div class="page-hdr-orb"></div>
-      <h1>Téléchargements</h1>
-      <p>Tout ce dont tu as besoin pour jouer</p>
+      <h1>Nos Services</h1>
+      <p>Découvrez tous nos produits et services</p>
     </div>
-    <div class="dl-grid" id="dl-grid"></div>
+    <div class="dl-grid-redirect"></div>
   </div>
 
   <!-- PRODUCT DETAIL -->
   <div id="page-product" class="page hidden">
     <div class="product-container">
-      <button class="btn-back" onclick="showPage('download')">← Retour</button>
+      <button class="btn-back" onclick="showPage('services')">← Retour</button>
       <div class="product-detail" id="product-detail"></div>
     </div>
   </div>

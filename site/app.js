@@ -391,9 +391,9 @@ async function buyProduct(productId, productName, price, url) {
       window.open(url, '_blank');
     }
     
-    // Retourner à la page de téléchargements
+    // Retourner à la page services
     setTimeout(() => {
-      showPage('download');
+      showPage('services');
     }, 1000);
   } else {
     // Pour les produits payants, utiliser le système de paiement existant
