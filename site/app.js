@@ -431,33 +431,25 @@ async function submitDownload(){
   const name=document.getElementById("dl-name").value.trim();
   const desc=document.getElementById("dl-desc").value.trim();
   const image=document.getElementById("dl-image").value.trim();
-  const game=document.getElementById("dl-game").value.trim();
   const url=document.getElementById("dl-url").value.trim();
   const price=document.getElementById("dl-price").value.trim()||"Free";
   
-  // Validation améliorée
+  // Validation
   if(!name||!url){
     alert("Nom et lien requis.");
     return;
   }
-  if(!game){
-    alert("Veuillez sélectionner une catégorie de jeu.");
-    return;
-  }
-  
-  // Debug: afficher les données envoyées
-  console.log("Données envoyées:", {name,desc,image,game,url,price});
   
   const res=await fetch("/api/downloads",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({name,desc,image,game,url,price})
+    body:JSON.stringify({name,desc,image,url,price})
   });
   const d=await res.json();
   if(d.success){
     closeModal();
     // Reset form
-    ["dl-name","dl-desc","dl-image","dl-game","dl-url","dl-price"].forEach(id=>document.getElementById(id).value="");
+    ["dl-name","dl-desc","dl-image","dl-url","dl-price"].forEach(id=>document.getElementById(id).value="");
     loadDownloads();
   } else {
     alert(d.error||"Erreur lors de l'ajout du téléchargement.");
