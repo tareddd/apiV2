@@ -384,7 +384,7 @@ function renderDownloads(items){
       ${d.desc?`<p class="dl-desc">${d.desc}</p>`:""}
       ${adminUnlocked?`
         <div style="display:flex;gap:8px;margin-top:8px;" onclick="event.stopPropagation();">
-          <button class="dl-edit" onclick="editCategory('${d.id}', '${d.game || ''}')">Modifier catégorie</button>
+          <button class="dl-edit" onclick="openEditModal('${d.id}')">Modifier</button>
           <button class="dl-delete" onclick="deleteDownload('${d.id}')">Supprimer</button>
         </div>
       `:""}
@@ -455,6 +455,8 @@ async function showProductDetail(productId) {
           </div>
           ${isOutOfStock ? 
             `<button class="btn-buy disabled" disabled>Out of Stock</button>` :
+            product.status === 'down' ?
+            `<button class="btn-buy disabled" disabled style="background:#374151;cursor:not-allowed;color:#9ca3af">Updating...</button>` :
             `<button class="btn-buy" onclick="buyProduct('${product.id}', '${product.name}', '${product.price}', '${product.url}')">Buy Now</button>`
           }
         </div>
@@ -622,40 +624,70 @@ async function deleteDownload(id){
   loadDownloads();
 }
 
-// ── Modification de catégorie ───────────────────────────────────
-async function editCategory(id, currentGame){
+// ── Modal modification produit ────────────────────────────
+function openEditModal(id) {
+  const product = allProducts.find(p => p.id === id);
+  if (!product) return;
+
   const gameOptions = [
     { value: '', text: 'Pas de catégorie' },
-    { value: 'zelda-botw', text: 'Zelda Breath of the Wild' },
-    { value: 'zelda-totk', text: 'Zelda Tears of the Kingdom' },
-    { value: 'gta-v', text: 'Grand Theft Auto V' },
     { value: 'fortnite', text: 'Fortnite' },
-    { value: 'fortnite-og', text: 'Fortnite OG' }
-  ];
-  
-  const options = gameOptions.map(opt => 
-    `<option value="${opt.value}" ${opt.value === currentGame ? 'selected' : ''}>${opt.text}</option>`
-  ).join('');
-  
+    { value: 'fortnite-og', text: 'Fortnite OG' },
+    { value: 'gta-v', text: 'GTA V' },
+    { value: 'zelda-botw', text: 'Zelda BotW' },
+    { value: 'zelda-totk', text: 'Zelda TotK' }
+  ].map(o => `<option value="${o.value}" ${o.value === (product.game||'') ? 'selected':''}>${o.text}</option>`).join('');
+
+  const isDown = product.status === 'down';
+
   const modalHTML = `
     <div class="modal-overlay" id="edit-modal-overlay" onclick="closeEditModal()">
-      <div class="modal" onclick="event.stopPropagation()">
-        <h2>Modifier la catégorie</h2>
+      <div class="modal" style="max-width:480px" onclick="event.stopPropagation()">
+        <h2>✏️ Modifier le produit</h2>
         <div class="modal-form">
-          <label>Nouvelle catégorie</label>
-          <select id="edit-game-select">
-            ${options}
-          </select>
+          <label>Nom du produit</label>
+          <input type="text" id="edit-name" value="${product.name || ''}"/>
+
+          <label>Description</label>
+          <input type="text" id="edit-desc" value="${product.desc || ''}"/>
+
+          <label>Image (URL)</label>
+          <input type="text" id="edit-image" value="${product.image || ''}"/>
+
+          <label>Lien de téléchargement</label>
+          <input type="text" id="edit-url" value="${product.url || ''}"/>
+
+          <label>Prix</label>
+          <input type="text" id="edit-price" value="${product.price || 'Free'}"/>
+
+          <label>Catégorie</label>
+          <select id="edit-game">${gameOptions}</select>
+
+          <label>Statut du produit</label>
+          <div style="display:flex;gap:10px;margin-top:4px">
+            <button class="btn-edit-status ${!isDown ? 'active-status' : ''}" id="btn-status-up" onclick="setEditStatus('up')" type="button">
+              ✅ Upload (disponible)
+            </button>
+            <button class="btn-edit-status ${isDown ? 'active-status down-status' : ''}" id="btn-status-down" onclick="setEditStatus('down')" type="button">
+              🔴 Down (Updating...)
+            </button>
+          </div>
+          <input type="hidden" id="edit-status" value="${product.status || 'up'}"/>
         </div>
         <div class="modal-btns">
           <button class="btn-ghost" onclick="closeEditModal()">Annuler</button>
-          <button class="btn-primary" onclick="saveCategory('${id}')">Sauvegarder</button>
+          <button class="btn-primary" onclick="saveEditModal('${id}')">Sauvegarder</button>
         </div>
       </div>
     </div>
   `;
-  
   document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function setEditStatus(status) {
+  document.getElementById('edit-status').value = status;
+  document.getElementById('btn-status-up').className = 'btn-edit-status' + (status === 'up' ? ' active-status' : '');
+  document.getElementById('btn-status-down').className = 'btn-edit-status' + (status === 'down' ? ' active-status down-status' : '');
 }
 
 function closeEditModal(){
@@ -663,26 +695,30 @@ function closeEditModal(){
   if(modal) modal.remove();
 }
 
-async function saveCategory(id){
-  const newGame = document.getElementById('edit-game-select').value;
-  
-  try{
+async function saveEditModal(id) {
+  const name   = document.getElementById('edit-name').value.trim();
+  const desc   = document.getElementById('edit-desc').value.trim();
+  const image  = document.getElementById('edit-image').value.trim();
+  const url    = document.getElementById('edit-url').value.trim();
+  const price  = document.getElementById('edit-price').value.trim() || 'Free';
+  const game   = document.getElementById('edit-game').value;
+  const status = document.getElementById('edit-status').value;
+
+  if (!name) { alert('Le nom est requis.'); return; }
+
+  try {
     const res = await fetch(`/api/downloads/${id}`, {
       method: 'PUT',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({game: newGame})
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, desc, image, url, price, game, status })
     });
-    
-    if(res.ok){
-      closeEditModal();
-      loadDownloads();
-    } else {
-      alert('Erreur lors de la modification de la catégorie');
-    }
-  }catch(_){
-    alert('Erreur de connexion');
-  }
+    if (res.ok) { closeEditModal(); loadDownloads(); }
+    else alert('Erreur lors de la sauvegarde.');
+  } catch(_) { alert('Erreur de connexion.'); }
 }
+
+// Ancienne fonction gardée pour compatibilité
+async function editCategory(id) { openEditModal(id); }
 
 // ── Téléchargement avec vérification de clé ────────────────────────
 async function downloadWithKeyCheck(url, name){

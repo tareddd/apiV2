@@ -318,3 +318,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:cent
 .admin-ip-form input:focus { border-color: var(--cyan); }
 
 .admin-ip-discord { color: #5865f2; font-size: .85rem; font-weight: 600; min-width: 120px; }
+
+/* ── Edit product modal ──────────────────────────────────── */
+.btn-edit-status { background: rgba(255,255,255,.05); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; color: var(--muted); cursor: pointer; font-size: .85rem; transition: all .2s; flex: 1; }
+.btn-edit-status.active-status { border-color: var(--ok); color: var(--ok); background: rgba(16,185,129,.1); }
+.btn-edit-status.down-status { border-color: var(--err); color: var(--err); background: rgba(239,68,68,.1); }
