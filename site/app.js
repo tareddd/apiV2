@@ -290,6 +290,7 @@ async function initAuth(){
   if (data.role === "owner" || data.isAdmin) {
     const adminLink = document.getElementById("nav-admin-link");
     if (adminLink) adminLink.style.display = "inline-block";
+    // Le FAB reste caché jusqu'à ce que l'admin mode soit activé depuis le panel
   }
 }
 
@@ -337,8 +338,11 @@ async function loadDownloads(){
   const grid=document.getElementById("dl-grid");
   const fab=document.getElementById("fab-add");
 
-  // Affiche toujours le FAB peu importe la page
-  if(fab) fab.classList.remove("hidden");
+  // Affiche le FAB seulement si admin mode activé
+  if(fab) {
+    if(adminUnlocked) fab.classList.remove("hidden");
+    else fab.classList.add("hidden");
+  }
 
   if(!grid) return;
 
@@ -741,21 +745,25 @@ async function downloadWithKeyCheck(url, name){
 }
 
 // ── Modal ajout ───────────────────────────────────────────
-const ADMIN_CREDS = { user: "dmaowner", pass: "APIV2" };
 let adminUnlocked = false;
 
+function enableAdminMode() {
+  adminUnlocked = true;
+  document.getElementById("admin-mode-label").textContent = "Activé";
+  document.getElementById("admin-mode-label").style.color = "var(--ok)";
+  document.getElementById("fab-add").classList.remove("hidden");
+  loadDownloads();
+}
+
+function disableAdminMode() {
+  adminUnlocked = false;
+  document.getElementById("admin-mode-label").textContent = "Désactivé";
+  document.getElementById("admin-mode-label").style.color = "var(--err)";
+  document.getElementById("fab-add").classList.add("hidden");
+  loadDownloads();
+}
+
 function openAddModal(){
-  if(!adminUnlocked){
-    const user = prompt("Nom d'utilisateur :");
-    if(!user) return;
-    const pass = prompt("Mot de passe :");
-    if(user === ADMIN_CREDS.user && pass === ADMIN_CREDS.pass){
-      adminUnlocked = true;
-    } else {
-      alert("Identifiants incorrects.");
-      return;
-    }
-  }
   document.getElementById("modal-overlay").classList.remove("hidden");
 }
 function closeModal(){

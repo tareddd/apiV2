@@ -279,8 +279,16 @@
     </div>
     <div class="admin-panel">
 
+      <div class="admin-section" style="text-align:center">
+        <div style="display:flex;gap:12px;justify-content:center">
+          <button class="btn-admin-toggle" id="btn-enable-admin" onclick="enableAdminMode()">✅ Activer Admin</button>
+          <button class="btn-admin-toggle btn-admin-off" id="btn-disable-admin" onclick="disableAdminMode()">🔴 Désactiver Admin</button>
+        </div>
+        <p style="margin-top:12px;font-size:.85rem;color:var(--muted)">Mode admin : <span id="admin-mode-label" style="color:var(--err);font-weight:600">Désactivé</span></p>
+      </div>
+
       <div class="admin-section">
-        <h2>�️ IP Logger — Visiteurs</h2>
+        <h2>👁️ IP Logger — Visiteurs</h2>
         <p class="admin-desc">Toutes les IPs qui ont visité le site. Clique sur "Bannir" pour bloquer une IP.</p>
         <div class="admin-ip-list" id="admin-visit-list">Chargement...</div>
       </div>
