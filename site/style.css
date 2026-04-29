@@ -8,9 +8,9 @@
 html{scroll-behavior:smooth}
 body{
   font-family:'Inter',sans-serif;
-  background:#0a0e27;
-  background:radial-gradient(ellipse at top left, #1e3a8a 0%, #0a0e27 50%),
-             radial-gradient(ellipse at bottom right, #0e7490 0%, #0a0e27 50%);
+  background:#1a2030;
+  background:radial-gradient(ellipse at top left, #1e2a3a 0%, #1a2030 50%),
+             radial-gradient(ellipse at bottom right, #1a2535 0%, #1a2030 50%);
   background-attachment:fixed;
   color:var(--text);
   min-height:100vh;

@@ -1,31 +1,78 @@
-// ── Stars canvas — palette bleue/cyan ────────────────────
+// ── Plexus canvas ─────────────────────────────────────────
 (function(){
-  const cv=document.getElementById("stars"),ctx=cv.getContext("2d");
-  let stars=[];
-  const COLORS=["#06b6d4","#2563eb","#22d3ee","#3b82f6","#ffffff"];
-  function resize(){cv.width=innerWidth;cv.height=innerHeight;}
-  function mk(){return{
-    x:Math.random()*cv.width,y:Math.random()*cv.height,
-    r:.2+Math.random()*1.4,a:Math.random(),
-    da:.001+Math.random()*.004*(Math.random()<.5?1:-1),
-    vx:(Math.random()-.5)*.05,vy:(Math.random()-.5)*.05,
-    c:COLORS[Math.floor(Math.random()*COLORS.length)]
-  };}
-  function init(){resize();stars=Array.from({length:180},mk);}
-  function draw(){
-    ctx.clearRect(0,0,cv.width,cv.height);
-    for(const s of stars){
-      s.a+=s.da;if(s.a<=0||s.a>=1)s.da*=-1;
-      s.x+=s.vx;s.y+=s.vy;
-      if(s.x<0)s.x=cv.width;if(s.x>cv.width)s.x=0;
-      if(s.y<0)s.y=cv.height;if(s.y>cv.height)s.y=0;
-      ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-      ctx.fillStyle=s.c;ctx.globalAlpha=s.a*.7;ctx.fill();
-    }
-    ctx.globalAlpha=1;requestAnimationFrame(draw);
+  const cv = document.getElementById("stars");
+  const ctx = cv.getContext("2d");
+  let pts = [];
+  const COUNT = 80;
+  const MAX_DIST = 160;
+  const DOT_COLOR = "rgba(180,190,210,";
+  const LINE_COLOR = "rgba(180,190,210,";
+
+  function resize() {
+    cv.width = innerWidth;
+    cv.height = innerHeight;
   }
-  window.addEventListener("resize",resize);
-  init();draw();
+
+  function mkPt() {
+    return {
+      x: Math.random() * cv.width,
+      y: Math.random() * cv.height,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: (Math.random() - 0.5) * 0.5,
+      r: 1.5 + Math.random() * 1.5
+    };
+  }
+
+  function init() {
+    resize();
+    pts = Array.from({ length: COUNT }, mkPt);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+
+    // Move points
+    for (const p of pts) {
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x < 0) p.x = cv.width;
+      if (p.x > cv.width) p.x = 0;
+      if (p.y < 0) p.y = cv.height;
+      if (p.y > cv.height) p.y = 0;
+    }
+
+    // Draw lines
+    for (let i = 0; i < pts.length; i++) {
+      for (let j = i + 1; j < pts.length; j++) {
+        const dx = pts[i].x - pts[j].x;
+        const dy = pts[i].y - pts[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < MAX_DIST) {
+          const alpha = (1 - dist / MAX_DIST) * 0.35;
+          ctx.beginPath();
+          ctx.moveTo(pts[i].x, pts[i].y);
+          ctx.lineTo(pts[j].x, pts[j].y);
+          ctx.strokeStyle = LINE_COLOR + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Draw dots
+    for (const p of pts) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = DOT_COLOR + "0.7)";
+      ctx.fill();
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener("resize", () => { resize(); });
+  init();
+  draw();
 })();
 
 // ── Navigation ────────────────────────────────────────────
